@@ -1,0 +1,7 @@
+# Carpetas de compilación
+bin/
+obj/
+
+# Archivos de usuario y configuraciones locales
+*.user
+appsettings.Development.json

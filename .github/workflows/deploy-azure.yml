@@ -1,0 +1,32 @@
+name: Deploy API to Azure App Service
+
+on:
+  push:
+    branches: [ main ] # O 'master' según tu rama principal
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Traer el código
+      - uses: actions/checkout@v4
+
+      # 2. Configurar el motor de .NET 8
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x' 
+
+      # 3. Compilar la API en modo Producción
+      - name: Publish API
+        run: dotnet publish -c Release -o ./publish
+
+      # 4. Enviar a Azure Web App
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          # IMPORTANTE: Este debe ser el nombre exacto de tu App Service en Azure
+          app-name: 'TiempoBibliaApp.Api' 
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+          package: ./publish

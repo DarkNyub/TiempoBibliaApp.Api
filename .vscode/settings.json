@@ -1,0 +1,5 @@
+{
+    "appService.preDeployTask": "publish-release",
+    "appService.deploySubpath": "bin/Release/net10.0/publish",
+    "appService.defaultWebAppToDeploy": "/subscriptions/a2c23850-7484-4f42-a5b9-fccb3bae5f6c/resourceGroups/IglesiaResource/providers/Microsoft.Web/sites/TiempoBibliaAppApi"
+}
