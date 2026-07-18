@@ -11,39 +11,33 @@ namespace TiempoBiblia.Api.Features.Productos
     {
         public int Id { get; set; }
         
-        [Required, MaxLength(200)]
+        [Required, MaxLength(300)]
         public string Nombre { get; set; } = string.Empty;
         
-        public string Descripcion { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = "";
         
-        /// <summary>
-        /// Precio base. Si EsGratuito es true, el frontend puede ignorar esto o mostrarlo tachado.
-        /// </summary>
         public decimal Precio { get; set; }
 
-        /// <summary>
-        /// Descuento aplicable (ej. monto fijo o porcentaje). El frontend decide cómo renderizarlo.
-        /// </summary>
         public decimal Descuento { get; set; } = 0;
         
-        public bool EsGratuito { get; set; }
+        public bool EsGratuito { get; set; } = false;
         
-        // URLs de recursos externos
-        public string ImagenUrl { get; set; } = string.Empty; 
-        public string Tipo { get; set; } = string.Empty; // Ej: "PDF", "Video", "Hibrido"
-        public string PdfUrl { get; set; } = string.Empty;
-        public string VideoUrl { get; set; } = string.Empty; 
+        // URLs de recursos externos (Ahora permiten nulos)
+        public string? ImagenUrl { get; set; } 
+        public string Tipo { get; set; } = "Imprimible"; 
+        public string? PdfUrl { get; set; }
+        public string? VideoUrl { get; set; } 
         
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
         
-        /// <summary>
-        /// Bandera de visibilidad (Soft-delete).
-        /// </summary>
         public bool Activo { get; set; } = true;
 
-        // Relación 1 a Muchos: Un producto pertenece a una categoría
+        // Relación 1 a Muchos: Un producto pertenece a una categoría (PRINCIPAL)
         public int CategoriaId { get; set; }
         public Categoria Categoria { get; set; } = null!;
+
+        // Relación Muchos a Muchos: Categorías SECUNDARIAS (Cross-listing)
+        public ICollection<ProductoCategoriaSecundaria> CategoriasSecundarias { get; set; } = new List<ProductoCategoriaSecundaria>();
 
         // Relaciones con Tags y Paquetes
         public ICollection<ProductoTag> ProductoTags { get; set; } = new List<ProductoTag>();

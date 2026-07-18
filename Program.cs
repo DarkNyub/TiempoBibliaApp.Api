@@ -4,6 +4,8 @@ using TiempoBiblia.Api.Features.Categorias;
 using TiempoBiblia.Api.Features.Paquetes;
 using TiempoBiblia.Api.Features.Productos;
 using TiempoBiblia.Api.Features.Tags;
+// 🔥 NUEVO: Importamos el espacio de nombres de Descargas
+using TiempoBiblia.Api.Features.Descargas;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Base de Datos: Conexión robusta a PostgreSQL (Neon.tech)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// 🔥 NUEVO: Registramos HttpClient para poder comunicarnos con Google Drive
+builder.Services.AddHttpClient();
 
 // Registro de dependencias por Features (Clases concretas, sin interfaces)
 builder.Services.AddScoped<CategoriaRepository>();
@@ -27,6 +32,10 @@ builder.Services.AddScoped<ProductoService>();
 
 builder.Services.AddScoped<TagRepository>();
 builder.Services.AddScoped<TagService>();
+
+// 🔥 NUEVO: Registro de los servicios para la bóveda de Descargas Seguras
+builder.Services.AddScoped<DescargaRepository>();
+builder.Services.AddScoped<DescargaService>();
 
 // Controladores: Habilitamos la arquitectura MVC para APIs estructuradas
 builder.Services.AddControllers()

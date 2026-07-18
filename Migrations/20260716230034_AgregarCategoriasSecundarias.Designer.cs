@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TiempoBiblia.Api.Data;
@@ -11,9 +12,11 @@ using TiempoBiblia.Api.Data;
 namespace TiempoBiblia.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260716230034_AgregarCategoriasSecundarias")]
+    partial class AgregarCategoriasSecundarias
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -106,14 +109,16 @@ namespace TiempoBiblia.Api.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ImagenUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("PdfUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<decimal>("Precio")
@@ -124,6 +129,7 @@ namespace TiempoBiblia.Api.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("VideoUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");

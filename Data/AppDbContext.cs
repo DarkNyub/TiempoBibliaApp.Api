@@ -18,7 +18,10 @@ namespace TiempoBiblia.Api.Data
         public DbSet<Paquete> Paquetes { get; set; }
         public DbSet<PaqueteProducto> PaqueteProductos { get; set; }
         public DbSet<ProductoRelacionado> ProductosRelacionados { get; set; }
+        public DbSet<ProductoCategoriaSecundaria> ProductoCategoriasSecundarias { get; set; }
+        public DbSet<TokenDescarga> TokensDescarga { get; set; }
 
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -45,6 +48,10 @@ namespace TiempoBiblia.Api.Data
                 .WithMany(p => p.ProductosRelacionadosDestino)
                 .HasForeignKey(pr => pr.ProductoRelacionadoId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // NUEVO: Llave compuesta para las categorías secundarias
+            modelBuilder.Entity<ProductoCategoriaSecundaria>()
+                .HasKey(pcs => new { pcs.ProductoId, pcs.CategoriaId });
         }
     }
 }
