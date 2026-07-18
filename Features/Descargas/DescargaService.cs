@@ -22,7 +22,7 @@ namespace TiempoBiblia.Api.Features.Descargas
                 // Le damos exactamente 24 horas de vida
                 FechaExpiracion = DateTime.UtcNow.AddHours(24), 
                 DescargasRealizadas = 0,
-                LimiteDescargas = 3 
+                LimiteDescargas = 1 
             };
 
             return await _repository.CrearTokenAsync(nuevoToken);
