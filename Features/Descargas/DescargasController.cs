@@ -49,7 +49,7 @@ namespace TiempoBiblia.Api.Features.Descargas
                 return BadRequest("Este producto no tiene un archivo configurado.");
             }
 
-            ttry
+            try
             {
                 // 1. Creamos la petición manualmente
                 var requestDrive = new HttpRequestMessage(HttpMethod.Get, token.Producto.PdfUrl);
