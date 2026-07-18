@@ -49,17 +49,28 @@ namespace TiempoBiblia.Api.Features.Descargas
                 return BadRequest("Este producto no tiene un archivo configurado.");
             }
 
-            try
+            ttry
             {
-                // Descargamos de Drive a la memoria de nuestro servidor
-                var streamArchivo = await _httpClient.GetStreamAsync(token.Producto.PdfUrl);
+                // 1. Creamos la petición manualmente
+                var requestDrive = new HttpRequestMessage(HttpMethod.Get, token.Producto.PdfUrl);
+                
+                // 2. EL TRUCO DE MAGIA: Le decimos a Google que somos un navegador real (Chrome en Windows)
+                requestDrive.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
 
-                // Y se lo pasamos al cliente (el cliente NUNCA ve la URL de Drive)
+                // 3. Enviamos la petición disfrazada
+                var responseDrive = await _httpClient.SendAsync(requestDrive);
+                responseDrive.EnsureSuccessStatusCode();
+
+                // 4. Extraemos el archivo real
+                var streamArchivo = await responseDrive.Content.ReadAsStreamAsync();
+
+                // 5. Se lo entregamos al cliente con su extensión correcta
                 return File(streamArchivo, "application/pdf", $"{token.Producto.Nombre}.pdf");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Hubo un error al obtener el archivo desde el servidor de almacenamiento.");
+                // Ahora si falla, te dirá exactamente por qué falló
+                return StatusCode(500, $"Error al descargar desde Drive: {ex.Message}");
             }
         }
     }
