@@ -4,6 +4,8 @@ using TiempoBiblia.Api.Features.Paquetes;
 using TiempoBiblia.Api.Features.Productos;
 using TiempoBiblia.Api.Features.Tags;
 using TiempoBiblia.Api.Features.Relaciones;
+using TiempoBiblia.Api.Features.Descargas;
+using TiempoBiblia.Api.shared;
 
 namespace TiempoBiblia.Api.Data
 {
@@ -21,7 +23,7 @@ namespace TiempoBiblia.Api.Data
         public DbSet<ProductoCategoriaSecundaria> ProductoCategoriasSecundarias { get; set; }
         public DbSet<TokenDescarga> TokensDescarga { get; set; }
 
-        
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
