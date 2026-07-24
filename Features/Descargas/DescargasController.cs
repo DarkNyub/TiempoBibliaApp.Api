@@ -7,75 +7,118 @@ namespace TiempoBiblia.Api.Features.Descargas
     public class DescargasController : ControllerBase
     {
         private readonly DescargaService _service;
-        private readonly HttpClient _httpClient; // Usado para actuar de puente (Proxy) con Drive
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
-        public DescargasController(DescargaService service, HttpClient httpClient)
+        public DescargasController(
+            DescargaService service, 
+            HttpClient httpClient, 
+            IConfiguration configuration)
         {
             _service = service;
             _httpClient = httpClient;
+            _configuration = configuration;
         }
+
+        // ============================================================
+        // 1. ENDPOINT ADMINISTRADOR
+        // ============================================================
 
         /// <summary>
         /// POST: api/descargas/generar
-        /// (Solo para el Admin) Crea un link de 24 horas para un cliente.
+        /// Genera el enlace que apunta al Frontend en el nuevo dominio.
         /// </summary>
         [HttpPost("generar")]
         public async Task<IActionResult> GenerarLink([FromBody] GenerarLinkRequest request)
         {
             var token = await _service.GenerarLinkDescargaAsync(request.ProductoId, request.CorreoCliente);
             
-            // Retornamos la URL que le vas a enviar por WhatsApp
-            var urlDescarga = $"{Request.Scheme}://{Request.Host}/api/descargas/{token.Id}";
+            // 🔥 LEEMOS LA URL DESDE APPSETTINGS CON UN FALLBACK SEGURO
+            var baseUrl = _configuration["FrontendSettings:BaseUrl"]?.TrimEnd('/') 
+                          ?? "https://tiempobiblia-luzy.online";
+
+            var urlDescarga = $"{baseUrl}/descargar/{token.Id}";
             
             return Ok(new { UrlSegura = urlDescarga, ExpiraEn = token.FechaExpiracion });
         }
 
-        /// <summary>
-        /// GET: api/descargas/{tokenId}
-        /// (Para el Cliente) Valida el token y descarga el PDF desde Drive por detrás.
-        /// </summary>
-        [HttpGet("{tokenId}")]
-        public async Task<IActionResult> DescargarArchivo(Guid tokenId)
-        {
-            var token = await _service.ValidarYConsumirTokenAsync(tokenId);
+        // ============================================================
+        // 2. ENDPOINTS CLIENTE (PASO A PASO PARA BLAZOR)
+        // ============================================================
 
-            if (token == null)
+        /// <summary>
+        /// GET: api/descargas/validar/{tokenId}
+        /// Paso 1 (AJAX): Consulta si el botón de descarga debe habilitarse.
+        /// </summary>
+        [HttpGet("validar/{tokenId:guid}")]
+        public async Task<IActionResult> ValidarToken(Guid tokenId)
+        {
+            var esValido = await _service.ValidarTokenAsync(tokenId);
+
+            if (!esValido)
             {
-                return BadRequest("El link de descarga no existe, ha caducado, o ya superó el límite de descargas.");
+                return BadRequest(new { mensaje = "El link de descarga no existe, ha caducado o superó el límite." });
             }
 
-            if (string.IsNullOrEmpty(token.Producto.PdfUrl))
+            return Ok(new { valido = true });
+        }
+
+        /// <summary>
+        /// GET: api/descargas/obtener-archivo/{tokenId}
+        /// Paso 2 (AJAX): Actúa como Proxy descargando los bytes de Google Drive en memoria.
+        /// </summary>
+        [HttpGet("obtener-archivo/{tokenId:guid}")]
+        public async Task<IActionResult> ObtenerArchivo(Guid tokenId)
+        {
+            var token = await _service.ObtenerDatosArchivoAsync(tokenId);
+
+            if (token == null || string.IsNullOrEmpty(token.Producto.PdfUrl))
             {
-                return BadRequest("Este producto no tiene un archivo configurado.");
+                return BadRequest("El archivo no está disponible o el token expiró.");
             }
 
             try
             {
-                // 1. Creamos la petición manualmente
+                // Disfrazamos la petición para que Google Drive responda limpiamente
                 var requestDrive = new HttpRequestMessage(HttpMethod.Get, token.Producto.PdfUrl);
-                
-                // 2. EL TRUCO DE MAGIA: Le decimos a Google que somos un navegador real (Chrome en Windows)
                 requestDrive.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
 
-                // 3. Enviamos la petición disfrazada
                 var responseDrive = await _httpClient.SendAsync(requestDrive);
                 responseDrive.EnsureSuccessStatusCode();
 
-                // 4. Extraemos el archivo real
-                var streamArchivo = await responseDrive.Content.ReadAsStreamAsync();
+                var bytes = await responseDrive.Content.ReadAsByteArrayAsync();
 
-                // 5. Se lo entregamos al cliente con su extensión correcta
-                return File(streamArchivo, "application/pdf", $"{token.Producto.Nombre}.pdf");
+                // Retornamos el arreglo de bytes para que Blazor lo convierta en Blob
+                return File(bytes, "application/pdf", $"{token.Producto.Nombre}.pdf");
             }
             catch (Exception ex)
             {
-                // Ahora si falla, te dirá exactamente por qué falló
-                return StatusCode(500, $"Error al descargar desde Drive: {ex.Message}");
+                return StatusCode(500, $"Error al procesar el archivo desde Drive: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// POST: api/descargas/marcar-usado/{tokenId}
+        /// Paso 3 (AJAX): Invalida un uso en la Base de Datos una vez completado el flujo.
+        /// </summary>
+        [HttpPost("marcar-usado/{tokenId:guid}")]
+        public async Task<IActionResult> MarcarUsado(Guid tokenId)
+        {
+            var exito = await _service.ConsumirTokenAsync(tokenId);
+
+            if (!exito)
+            {
+                return BadRequest(new { mensaje = "No se pudo actualizar el token." });
+            }
+
+            return Ok(new { mensaje = "Descarga registrada con éxito." });
         }
     }
 
-    // DTO auxiliar para recibir los datos del admin
+    // ============================================================
+    // DTOs Y MODELOS DE SOLICITUD
+    // ============================================================
+
     public class GenerarLinkRequest
     {
         public int ProductoId { get; set; }

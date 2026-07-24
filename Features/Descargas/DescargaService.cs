@@ -11,7 +11,13 @@ namespace TiempoBiblia.Api.Features.Descargas
             _repository = repository;
         }
 
-        // Método para el ADMIN: Genera un nuevo link seguro
+        // ============================================================
+        // 1. SERVICIOS PARA EL ADMINISTRADOR
+        // ============================================================
+
+        /// <summary>
+        /// Genera un nuevo token seguro de 24 horas con límite de uso.
+        /// </summary>
         public async Task<TokenDescarga> GenerarLinkDescargaAsync(int productoId, string correoCliente)
         {
             var nuevoToken = new TokenDescarga
@@ -19,7 +25,6 @@ namespace TiempoBiblia.Api.Features.Descargas
                 ProductoId = productoId,
                 CorreoCliente = correoCliente,
                 FechaCreacion = DateTime.UtcNow,
-                // Le damos exactamente 24 horas de vida
                 FechaExpiracion = DateTime.UtcNow.AddHours(24), 
                 DescargasRealizadas = 0,
                 LimiteDescargas = 2 
@@ -28,22 +33,49 @@ namespace TiempoBiblia.Api.Features.Descargas
             return await _repository.CrearTokenAsync(nuevoToken);
         }
 
-        // Método para el CLIENTE: Valida y actualiza el contador
-        public async Task<TokenDescarga?> ValidarYConsumirTokenAsync(Guid tokenId)
+        // ============================================================
+        // 2. SERVICIOS PARA EL CLIENTE (FLUJO ATÓMICO)
+        // ============================================================
+
+        /// <summary>
+        /// Verifica si el token existe y si aún le quedan intentos válidos.
+        /// </summary>
+        public async Task<bool> ValidarTokenAsync(Guid tokenId)
         {
             var token = await _repository.ObtenerTokenConProductoAsync(tokenId);
+            return token != null && token.EsValido;
+        }
 
-            // Verificamos si existe y si la propiedad EsValido (que evalúa fecha y límite) es true
+        /// <summary>
+        /// Retorna el token con la información del producto listo para descargar.
+        /// </summary>
+        public async Task<TokenDescarga?> ObtenerDatosArchivoAsync(Guid tokenId)
+        {
+            var token = await _repository.ObtenerTokenConProductoAsync(tokenId);
+            
             if (token == null || !token.EsValido)
             {
                 return null;
             }
 
-            // Si es válido, sumamos una descarga y guardamos
+            return token;
+        }
+
+        /// <summary>
+        /// Suma una descarga realizada al token en la Base de Datos.
+        /// </summary>
+        public async Task<bool> ConsumirTokenAsync(Guid tokenId)
+        {
+            var token = await _repository.ObtenerTokenConProductoAsync(tokenId);
+
+            if (token == null || !token.EsValido)
+            {
+                return false;
+            }
+
             token.DescargasRealizadas++;
             await _repository.ActualizarTokenAsync(token);
-
-            return token;
+            return true;
         }
     }
 }

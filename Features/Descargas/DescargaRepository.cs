@@ -13,6 +13,10 @@ namespace TiempoBiblia.Api.Features.Descargas
             _context = context;
         }
 
+        // ============================================================
+        // 1. MÉTODOS DE CREACIÓN Y LECTURA
+        // ============================================================
+
         public async Task<TokenDescarga> CrearTokenAsync(TokenDescarga token)
         {
             _context.TokensDescarga.Add(token);
@@ -26,6 +30,10 @@ namespace TiempoBiblia.Api.Features.Descargas
                 .Include(t => t.Producto)
                 .FirstOrDefaultAsync(t => t.Id == tokenId);
         }
+
+        // ============================================================
+        // 2. MÉTODOS DE ESCRITURA Y ACTUALIZACIÓN
+        // ============================================================
 
         public async Task ActualizarTokenAsync(TokenDescarga token)
         {
