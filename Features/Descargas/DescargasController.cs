@@ -48,19 +48,23 @@ namespace TiempoBiblia.Api.Features.Descargas
 
         /// <summary>
         /// GET: api/descargas/validar/{tokenId}
-        /// Paso 1 (AJAX): Consulta si el botón de descarga debe habilitarse.
+        /// Paso 1: Valida el token y devuelve la URL directa de Google Drive.
         /// </summary>
         [HttpGet("validar/{tokenId:guid}")]
         public async Task<IActionResult> ValidarToken(Guid tokenId)
         {
-            var esValido = await _service.ValidarTokenAsync(tokenId);
+            var token = await _service.ObtenerDatosArchivoAsync(tokenId);
 
-            if (!esValido)
+            if (token == null || string.IsNullOrEmpty(token.Producto?.PdfUrl))
             {
-                return BadRequest(new { mensaje = "El link de descarga no existe, ha caducado o superó el límite." });
+                return BadRequest(new { valido = false, mensaje = "El link no existe, caducó o ya fue usado." });
             }
 
-            return Ok(new { valido = true });
+            // Retornamos el estado válido y la URL directa de Google Drive
+            return Ok(new { 
+                valido = true, 
+                urlDirecta = token.Producto.PdfUrl 
+            });
         }
 
         /// <summary>
