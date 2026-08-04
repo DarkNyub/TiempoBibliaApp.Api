@@ -77,5 +77,30 @@ namespace TiempoBiblia.Api.Features.Descargas
             await _repository.ActualizarTokenAsync(token);
             return true;
         }
+        /// <summary>
+        /// Procesa un carrito de compras completo, generando un token por cada producto.
+        /// </summary>
+        public async Task<List<TokenDescarga>> ProcesarPedidoAsync(string correoCliente, List<int> productosIds)
+        {
+            var tokens = new List<TokenDescarga>();
+
+            foreach (var productoId in productosIds)
+            {
+                var nuevoToken = new TokenDescarga
+                {
+                    ProductoId = productoId,
+                    CorreoCliente = correoCliente,
+                    FechaCreacion = DateTime.UtcNow,
+                    FechaExpiracion = DateTime.UtcNow.AddDays(7), // 7 días para descargas compradas
+                    DescargasRealizadas = 0,
+                    LimiteDescargas = 2 // 3 intentos para evitar abusos
+                };
+
+                var tokenGuardado = await _repository.CrearTokenAsync(nuevoToken);
+                tokens.Add(tokenGuardado);
+            }
+
+            return tokens;
+        }
     }
 }

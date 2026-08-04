@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using TiempoBiblia.Api.Features.Descargas;
 
 namespace TiempoBiblia.Api.Features.Descargas
 {
@@ -117,15 +118,68 @@ namespace TiempoBiblia.Api.Features.Descargas
 
             return Ok(new { mensaje = "Descarga registrada con éxito." });
         }
+        // ============================================================
+        // 3. ENDPOINT PARA EL CHECKOUT (CARRITO DE COMPRAS)
+        // ============================================================
+
+        /// <summary>
+        /// POST: api/descargas/despachar-pedido
+        /// Recibe la confirmación de pago, genera los tokens y "envía" el correo.
+        /// </summary>
+        [HttpPost("despachar-pedido")]
+        public async Task<IActionResult> DespacharPedido([FromBody] DespacharPedidoRequestDto request)
+        {
+            try
+            {
+                if (request.ProductosIds == null || !request.ProductosIds.Any())
+                {
+                    return BadRequest(new { mensaje = "El pedido no contiene productos." });
+                }
+
+                // 1. Delegamos la creación de los tokens a la capa de servicios
+                var tokensGenerados = await _service.ProcesarPedidoAsync(request.Correo, request.ProductosIds);
+
+                // 2. Leemos la URL base de tu frontend desde appsettings (Fallback seguro)
+                var baseUrl = _configuration["FrontendSettings:BaseUrl"]?.TrimEnd('/') 
+                              ?? "https://tiempobiblia-luzy.online";
+                
+                var links = new List<string>();
+
+                foreach (var token in tokensGenerados)
+                {
+                    // Armamos el Link Mágico final (Ruta /descargar/{Guid})
+                    links.Add($"{baseUrl}/descargar/{token.Id}");
+                }
+
+                // ==============================================================
+                // 3. 📧 SIMULACIÓN DE ENVÍO DE CORREO ELECTRÓNICO
+                // ==============================================================
+                Console.WriteLine($"\n========================================");
+                Console.WriteLine($"📧 NUEVO PEDIDO DESPACHADO");
+                Console.WriteLine($"========================================");
+                Console.WriteLine($"Cliente: {request.Correo}");
+                Console.WriteLine($"ID de Pago: {request.PagoId}");
+                Console.WriteLine($"Links de descarga generados:");
+                foreach (var link in links)
+                {
+                    Console.WriteLine($"👉 {link}");
+                }
+                Console.WriteLine($"========================================\n");
+
+                // 4. Respondemos al Blazor que todo salió perfecto
+                return Ok(new { 
+                    mensaje = "Pedido despachado con éxito", 
+                    links = links 
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    mensaje = "Error interno al despachar el pedido", 
+                    detalle = ex.Message 
+                });
+            }
+        }
     }
 
-    // ============================================================
-    // DTOs Y MODELOS DE SOLICITUD
-    // ============================================================
-
-    public class GenerarLinkRequest
-    {
-        public int ProductoId { get; set; }
-        public string CorreoCliente { get; set; } = string.Empty;
-    }
 }
