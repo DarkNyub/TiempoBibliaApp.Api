@@ -93,7 +93,7 @@ namespace TiempoBiblia.Api.Features.Descargas
                     FechaCreacion = DateTime.UtcNow,
                     FechaExpiracion = DateTime.UtcNow.AddDays(7), // 7 días para descargas compradas
                     DescargasRealizadas = 0,
-                    LimiteDescargas = 2 // 3 intentos para evitar abusos
+                    LimiteDescargas = 2 // 2 intentos para evitar abusos
                 };
 
                 var tokenGuardado = await _repository.CrearTokenAsync(nuevoToken);
