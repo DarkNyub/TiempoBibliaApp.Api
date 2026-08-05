@@ -19,48 +19,74 @@ namespace TiempoBiblia.Api.Features.Checkout
             MercadoPagoConfig.AccessToken = _config["MercadoPago:AccessToken"];
         }
 
+        // =========================================================
+        // 1. ENDPOINT PARA PRODUCCIÓN (DINERO REAL)
+        // =========================================================
         [HttpPost("crear-preferencia")]
         public async Task<IActionResult> CrearPreferenciaPago([FromBody] SolicitudPagoDto request)
         {
             try
             {
-                // Leemos la URL de tu frontend desde tu appsettings para no quemarla en el código
-                var frontendUrl = _config["FrontendSettings:BaseUrl"];
-
-                // 1. Armamos el carrito para Mercado Pago
-                var requestPreferencia = new PreferenceRequest
-                {
-                    Items = new List<PreferenceItemRequest>
-                    {
-                        new PreferenceItemRequest
-                        {
-                            Title = request.Titulo,
-                            Quantity = 1,
-                            CurrencyId = "COP", // Moneda en Pesos Colombianos
-                            UnitPrice = request.TotalAPagar,
-                        }
-                    },
-                    // 2. ¿A dónde enviamos al cliente cuando termine de pagar?
-                    BackUrls = new PreferenceBackUrlsRequest
-                    {
-                        Success = $"{frontendUrl}/pago-exitoso", 
-                        Failure = $"{frontendUrl}/carrito",
-                        Pending = $"{frontendUrl}/carrito"
-                    },
-                    AutoReturn = "approved"
-                };
-
-                // 3. Hablamos con los servidores de Mercado Pago
-                var client = new PreferenceClient();
-                Preference preference = await client.CreateAsync(requestPreferencia);
-
-                // 4. Devolvemos la URL del Checkout a Blazor
+                var preference = await GenerarPreferenciaMercadoPago(request);
+                
+                // Devuelve la URL REAL (InitPoint)
                 return Ok(new RespuestaPagoDto { UrlPago = preference.InitPoint });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { mensaje = "Error al conectar con Mercado Pago: " + ex.Message });
             }
+        }
+
+        // =========================================================
+        // 2. ENDPOINT PARA PRUEBAS (SANDBOX)
+        // =========================================================
+        [HttpPost("crear-preferencia-sandbox")]
+        public async Task<IActionResult> CrearPreferenciaPagoSandbox([FromBody] SolicitudPagoDto request)
+        {
+            try
+            {
+                var preference = await GenerarPreferenciaMercadoPago(request);
+                
+                // Devuelve la URL DE PRUEBAS (SandboxInitPoint)
+                return Ok(new RespuestaPagoDto { UrlPago = preference.SandboxInitPoint });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensaje = "Error al conectar con Mercado Pago: " + ex.Message });
+            }
+        }
+
+        // =========================================================
+        // MÉTODO AUXILIAR PARA NO REPETIR CÓDIGO
+        // =========================================================
+        private async Task<Preference> GenerarPreferenciaMercadoPago(SolicitudPagoDto request)
+        {
+            var frontendUrl = _config["FrontendSettings:BaseUrl"];
+
+            var requestPreferencia = new PreferenceRequest
+            {
+                Items = new List<PreferenceItemRequest>
+                {
+                    new PreferenceItemRequest
+                    {
+                        Title = request.Titulo,
+                        Quantity = 1,
+                        CurrencyId = "COP", // Moneda en Pesos Colombianos
+                        UnitPrice = request.TotalAPagar,
+                    }
+                },
+                BackUrls = new PreferenceBackUrlsRequest
+                {
+                    Success = $"{frontendUrl}/pago-exitoso", 
+                    Failure = $"{frontendUrl}/carrito",
+                    Pending = $"{frontendUrl}/carrito"
+                },
+                AutoReturn = "approved"
+            };
+
+            var client = new PreferenceClient();
+            return await client.CreateAsync(requestPreferencia);
         }
     }
 }
