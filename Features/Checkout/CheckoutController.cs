@@ -59,7 +59,7 @@ namespace TiempoBiblia.Api.Features.Checkout
                     { 
                         Aprobado = true, 
                         Estado = payment.Status, 
-                        IdPago = payment.Id.ToString(),
+                        IdPago = "" + payment.Id.ToString(),
                         Mensaje = "¡Pago procesado con éxito!"
                     });
                 }
