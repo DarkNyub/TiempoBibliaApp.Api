@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace TiempoBiblia.Api.Features.Checkout
 {
     // =========================================================
@@ -5,22 +7,37 @@ namespace TiempoBiblia.Api.Features.Checkout
     // =========================================================
     public class PagoBrickDto
     {
+        [JsonPropertyName("token")]
         public string Token { get; set; } = string.Empty;
+
+        [JsonPropertyName("payment_method_id")]
         public string PaymentMethodId { get; set; } = string.Empty;
+
+        [JsonPropertyName("transaction_amount")]
         public decimal TransactionAmount { get; set; }
+
+        [JsonPropertyName("installments")]
         public int Installments { get; set; }
+
+        [JsonPropertyName("payer")]
         public PayerDto Payer { get; set; } = new();
     }
 
     public class PayerDto
     {
+        [JsonPropertyName("email")]
         public string Email { get; set; } = string.Empty;
+
+        [JsonPropertyName("identification")]
         public IdentificationDto Identification { get; set; } = new();
     }
 
     public class IdentificationDto
     {
+        [JsonPropertyName("type")]
         public string Type { get; set; } = string.Empty;
+
+        [JsonPropertyName("number")]
         public string Number { get; set; } = string.Empty;
     }
 
