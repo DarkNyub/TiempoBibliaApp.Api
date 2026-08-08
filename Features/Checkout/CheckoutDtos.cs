@@ -1,55 +1,62 @@
-using System.Text.Json.Serialization;
-
 namespace TiempoBiblia.Api.Features.Checkout
 {
-    // 🔥 1. EL ENVOLTORIO: Esto atrapa la cajita exterior que manda JavaScript
+    /// <summary>
+    /// Envoltorio principal para atrapar el JSON enviado por el frontend (Mercado Pago Bricks).
+    /// Bricks encapsula los datos de pago dentro de un objeto llamado 'formData'.
+    /// </summary>
     public class BrickPayloadDto
     {
-        [JsonPropertyName("formData")]
-        public PagoBrickDto FormData { get; set; } = new();
+        public PagoBrickDto formData { get; set; } = new();
     }
-    // =========================================================
-    // DTOs PARA RECIBIR EL PAGO DESDE BRICKS (FRONTEND)
-    // =========================================================
+
+    /// <summary>
+    /// DTO que mapea exactamente los datos de la tarjeta y la transacción enviados por Mercado Pago.
+    /// NOTA: Las propiedades están en 'snake_case' (minúsculas y guiones bajos) 
+    /// para garantizar que el serializador JSON de .NET no pierda los datos en la conversión.
+    /// </summary>
     public class PagoBrickDto
     {
-        [JsonPropertyName("token")]
-        public string Token { get; set; } = string.Empty;
-
-        [JsonPropertyName("payment_method_id")]
-        public string PaymentMethodId { get; set; } = string.Empty;
-
-        [JsonPropertyName("transaction_amount")]
-        public decimal TransactionAmount { get; set; }
-
-        [JsonPropertyName("installments")]
-        public int Installments { get; set; }
-
-        [JsonPropertyName("payer")]
-        public PayerDto Payer { get; set; } = new();
+        /// <summary>Token encriptado de un solo uso que representa la tarjeta de crédito/débito.</summary>
+        public string token { get; set; } = string.Empty;
+        
+        /// <summary>Método de pago detectado (ej. 'visa', 'master').</summary>
+        public string payment_method_id { get; set; } = string.Empty;
+        
+        /// <summary>ID del banco emisor de la tarjeta.</summary>
+        public string issuer_id { get; set; } = string.Empty; 
+        
+        /// <summary>Monto total exacto a cobrar al cliente.</summary>
+        public decimal transaction_amount { get; set; }
+        
+        /// <summary>Cantidad de cuotas seleccionadas por el cliente.</summary>
+        public int installments { get; set; }
+        
+        /// <summary>Información personal del pagador (correo y documento).</summary>
+        public PayerDto payer { get; set; } = new();
     }
 
+    /// <summary>
+    /// Contiene la información de contacto y validación del cliente que está pagando.
+    /// </summary>
     public class PayerDto
     {
-        [JsonPropertyName("email")]
-        public string Email { get; set; } = string.Empty;
-
-        [JsonPropertyName("identification")]
-        public IdentificationDto Identification { get; set; } = new();
+        public string email { get; set; } = string.Empty;
+        public IdentificationDto identification { get; set; } = new();
     }
 
+    /// <summary>
+    /// Representa el documento de identidad del pagador (Ej. CC, CE) y su número.
+    /// </summary>
     public class IdentificationDto
     {
-        [JsonPropertyName("type")]
-        public string Type { get; set; } = string.Empty;
-
-        [JsonPropertyName("number")]
-        public string Number { get; set; } = string.Empty;
+        public string type { get; set; } = string.Empty;
+        public string number { get; set; } = string.Empty;
     }
 
-    // =========================================================
-    // DTO PARA RESPONDER AL FRONTEND
-    // =========================================================
+    /// <summary>
+    /// Objeto estructurado que el Backend le devuelve al Frontend de Blazor 
+    /// para notificarle el resultado de la transacción (Aprobado o Rechazado).
+    /// </summary>
     public class RespuestaPagoBrickDto
     {
         public bool Aprobado { get; set; }
