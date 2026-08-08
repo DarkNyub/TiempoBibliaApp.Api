@@ -2,6 +2,12 @@ using System.Text.Json.Serialization;
 
 namespace TiempoBiblia.Api.Features.Checkout
 {
+    // 🔥 1. EL ENVOLTORIO: Esto atrapa la cajita exterior que manda JavaScript
+    public class BrickPayloadDto
+    {
+        [JsonPropertyName("formData")]
+        public PagoBrickDto FormData { get; set; } = new();
+    }
     // =========================================================
     // DTOs PARA RECIBIR EL PAGO DESDE BRICKS (FRONTEND)
     // =========================================================
