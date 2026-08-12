@@ -14,6 +14,11 @@ namespace TiempoBiblia.Api.Features.Categorias
         public string Nombre { get; set; } = string.Empty;
 
         /// <summary>
+        /// Para darle orden y posicionamiento a las categorias.
+        /// </summary>
+        public int Orden { get; set; } = 0; 
+
+        /// <summary>
         /// Bandera de visibilidad. Si es false, no se muestra al público pero sí en el admin.
         /// </summary>
         public bool Activo { get; set; } = true; 
