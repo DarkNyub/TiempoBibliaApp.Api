@@ -46,5 +46,30 @@ namespace TiempoBiblia.Api.Features.Productos
             await _context.SaveChangesAsync();
             return producto;
         }
+
+        // 🔥 NUEVO: Buscar un producto por su ID
+        public async Task<Producto?> ObtenerPorIdAsync(int id)
+        {
+            return await _context.Productos.FindAsync(id);
+        }
+
+        // 🔥 NUEVO: Actualizar un producto existente
+        public async Task<Producto> ActualizarAsync(Producto producto)
+        {
+            _context.Productos.Update(producto);
+            await _context.SaveChangesAsync();
+            return producto;
+        }
+
+        // 🔥 NUEVO: Eliminar físicamente un producto de la base de datos
+        public async Task<bool> EliminarAsync(int id)
+        {
+            var producto = await ObtenerPorIdAsync(id);
+            if (producto == null) return false;
+
+            _context.Productos.Remove(producto);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

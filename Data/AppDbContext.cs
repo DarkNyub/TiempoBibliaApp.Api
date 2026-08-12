@@ -5,6 +5,7 @@ using TiempoBiblia.Api.Features.Productos;
 using TiempoBiblia.Api.Features.Tags;
 using TiempoBiblia.Api.Features.Relaciones;
 using TiempoBiblia.Api.Features.Descargas;
+using TiempoBiblia.Api.Features.Pedidos;
 using TiempoBiblia.Api.shared;
 
 namespace TiempoBiblia.Api.Data
@@ -22,6 +23,8 @@ namespace TiempoBiblia.Api.Data
         public DbSet<ProductoRelacionado> ProductosRelacionados { get; set; }
         public DbSet<ProductoCategoriaSecundaria> ProductoCategoriasSecundarias { get; set; }
         public DbSet<TokenDescarga> TokensDescarga { get; set; }
+        public DbSet<Pedido> Pedidos { get; set; }
+        public DbSet<PedidoDetalle> PedidoDetalles { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
