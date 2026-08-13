@@ -22,18 +22,6 @@ namespace TiempoBiblia.Api.Features.Productos
         [HttpGet("admin")]
         public async Task<ActionResult<IEnumerable<Producto>>> GetAdmin() => Ok(await _service.ObtenerTodosAdminAsync());
 
-        [HttpPost]
-        public async Task<ActionResult<Producto>> Post(Producto producto)
-        {
-            try
-            {
-                var nuevoProducto = await _service.CrearAsync(producto);
-                return CreatedAtAction(nameof(GetById), new { id = nuevoProducto.Id }, nuevoProducto);
-            }
-            catch (ArgumentException ex) { return BadRequest(ex.Message); }
-        }
-
-        // 🔥 NUEVO: Endpoint para traer un solo producto
         [HttpGet("{id}")]
         public async Task<ActionResult<Producto>> GetById(int id)
         {
@@ -42,13 +30,25 @@ namespace TiempoBiblia.Api.Features.Productos
             return Ok(producto);
         }
 
-        // 🔥 NUEVO: Endpoint para modificar (PUT)
-        [HttpPut("{id}")]
-        public async Task<ActionResult<Producto>> Put(int id, Producto producto)
+        // 🔥 RECIBE EL NUEVO DTO
+        [HttpPost]
+        public async Task<ActionResult<Producto>> Post([FromBody] ProductoDto dto)
         {
             try
             {
-                var productoActualizado = await _service.ActualizarAsync(id, producto);
+                var nuevoProducto = await _service.CrearAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = nuevoProducto.Id }, nuevoProducto);
+            }
+            catch (ArgumentException ex) { return BadRequest(new { mensaje = ex.Message }); }
+        }
+
+        // 🔥 RECIBE EL NUEVO DTO
+        [HttpPut("{id}")]
+        public async Task<ActionResult<Producto>> Put(int id, [FromBody] ProductoDto dto)
+        {
+            try
+            {
+                var productoActualizado = await _service.ActualizarAsync(id, dto);
                 return Ok(productoActualizado);
             }
             catch (ArgumentException ex)
@@ -61,14 +61,13 @@ namespace TiempoBiblia.Api.Features.Productos
             }
         }
 
-        // 🔥 NUEVO: Endpoint para eliminar (DELETE)
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var eliminado = await _service.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Producto no encontrado o ya fue eliminado." });
             
-            return NoContent(); // HTTP 204: Indica que se borró con éxito y no hay contenido que devolver.
+            return NoContent(); 
         }
     }
 }

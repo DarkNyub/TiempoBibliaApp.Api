@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TiempoBiblia.Api.Data;
+using TiempoBiblia.Api.Features.Productos;
 
 namespace TiempoBiblia.Api.Features.Productos
 {
@@ -15,29 +16,42 @@ namespace TiempoBiblia.Api.Features.Productos
             _context = context;
         }
 
-        /// <summary>
-        /// Trae TODOS los productos para el panel de administración (carga ligera).
-        /// </summary>
         public async Task<List<Producto>> ObtenerTodosAdminAsync()
         {
-            return await _context.Productos
-                .AsNoTracking()
-                .ToListAsync();
+            return await _context.Productos.AsNoTracking().ToListAsync();
         }
 
-        /// <summary>
-        /// Trae los productos activos e INCLUYE sus relaciones principales para la tienda web.
-        /// </summary>
         public async Task<List<Producto>> ObtenerActivosPublicoAsync()
         {
             return await _context.Productos
                 .Where(p => p.Activo == true)
-                .Include(p => p.Categoria) // Para mostrar "Categoría: Cursos"
-                .Include(p => p.ProductoTags).ThenInclude(pt => pt.Tag) // Para mostrar los Tags
-                .Include(p => p.ProductosRelacionadosOrigen)
-                    .ThenInclude(pr => pr.ProductoRelacionadoDestino) // ¡El Cross-Selling!
+                .Include(p => p.Categoria) 
+                .Include(p => p.ProductoTags).ThenInclude(pt => pt.Tag) 
+                .Include(p => p.ProductosRelacionadosOrigen).ThenInclude(pr => pr.ProductoRelacionadoDestino) 
                 .AsNoTracking()
                 .ToListAsync();
+        }
+
+        // 🔥 OBTENER PARA LECTURA (Sin rastreo)
+        public async Task<Producto?> ObtenerPorIdAsync(int id)
+        {
+            return await _context.Productos
+                .Include(p => p.Categoria)
+                .Include(p => p.CategoriasSecundarias)
+                .Include(p => p.ProductoTags)
+                .Include(p => p.ProductosRelacionadosOrigen)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+        // 🔥 OBTENER PARA EDICIÓN (Con rastreo activado para poder modificar relaciones)
+        public async Task<Producto?> ObtenerParaEdicionAsync(int id)
+        {
+            return await _context.Productos
+                .Include(p => p.CategoriasSecundarias)
+                .Include(p => p.ProductoTags)
+                .Include(p => p.ProductosRelacionadosOrigen)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<Producto> CrearAsync(Producto producto)
@@ -47,24 +61,18 @@ namespace TiempoBiblia.Api.Features.Productos
             return producto;
         }
 
-        // 🔥 NUEVO: Buscar un producto por su ID
-        public async Task<Producto?> ObtenerPorIdAsync(int id)
-        {
-            return await _context.Productos.FindAsync(id);
-        }
-
-        // 🔥 NUEVO: Actualizar un producto existente
+        // 🔥 ACTUALIZAR CON RELACIONES
         public async Task<Producto> ActualizarAsync(Producto producto)
         {
+            // Update detectará los cambios en las listas de navegación y sincronizará las tablas intermedias
             _context.Productos.Update(producto);
             await _context.SaveChangesAsync();
             return producto;
         }
 
-        // 🔥 NUEVO: Eliminar físicamente un producto de la base de datos
         public async Task<bool> EliminarAsync(int id)
         {
-            var producto = await ObtenerPorIdAsync(id);
+            var producto = await _context.Productos.FindAsync(id);
             if (producto == null) return false;
 
             _context.Productos.Remove(producto);

@@ -1,7 +1,9 @@
+using TiempoBiblia.Api.Features.Relaciones;
+
 namespace TiempoBiblia.Api.Features.Productos
 {
     /// <summary>
-    /// Capa de lógica de negocio para los Productos.
+    /// Capa de lógica de negocio y mapeo relacional.
     /// </summary>
     public class ProductoService
     {
@@ -14,55 +16,96 @@ namespace TiempoBiblia.Api.Features.Productos
 
         public async Task<List<Producto>> ObtenerTodosAdminAsync() => await _repository.ObtenerTodosAdminAsync();
         public async Task<List<Producto>> ObtenerActivosPublicoAsync() => await _repository.ObtenerActivosPublicoAsync();
+        public async Task<Producto?> ObtenerPorIdAsync(int id) => await _repository.ObtenerPorIdAsync(id);
 
-        public async Task<Producto> CrearAsync(Producto producto)
+        // 🔥 CREAR CON RELACIONES MÚLTIPLES
+        public async Task<Producto> CrearAsync(ProductoDto dto)
         {
-            if (string.IsNullOrWhiteSpace(producto.Nombre)) throw new ArgumentException("El nombre es obligatorio.");
-            if (producto.Precio < 0 || producto.Descuento < 0) throw new ArgumentException("Precios no pueden ser negativos.");
-            if (producto.EsGratuito) { producto.Precio = 0; producto.Descuento = 0; }
+            ValidarReglasNegocio(dto);
+
+            var producto = new Producto
+            {
+                Nombre = dto.Nombre,
+                Descripcion = dto.Descripcion,
+                Precio = dto.Precio,
+                Descuento = dto.Descuento,
+                EsGratuito = dto.EsGratuito,
+                ImagenUrl = dto.ImagenUrl,
+                Tipo = dto.Tipo,
+                PdfUrl = dto.PdfUrl,
+                VideoUrl = dto.VideoUrl,
+                Activo = dto.Activo,
+                CategoriaId = dto.CategoriaId,
+                // Mapeo mágico de relaciones
+                CategoriasSecundarias = dto.CategoriasSecundariasIds.Select(id => new ProductoCategoriaSecundaria { CategoriaId = id }).ToList(),
+                ProductoTags = dto.TagsIds.Select(id => new ProductoTag { TagId = id }).ToList(),
+                ProductosRelacionadosOrigen = dto.ProductosRelacionadosIds.Select(id => new ProductoRelacionado { ProductoRelacionadoId = id }).ToList()
+            };
+
             return await _repository.CrearAsync(producto);
         }
 
-        // 🔥 NUEVO: Obtener por ID
-        public async Task<Producto?> ObtenerPorIdAsync(int id)
+        // 🔥 ACTUALIZAR CON RELACIONES MÚLTIPLES
+        public async Task<Producto> ActualizarAsync(int id, ProductoDto dto)
         {
-            return await _repository.ObtenerPorIdAsync(id);
-        }
+            ValidarReglasNegocio(dto);
 
-        // 🔥 NUEVO: Validar y modificar producto
-        public async Task<Producto> ActualizarAsync(int id, Producto productoActualizado)
-        {
-            if (id != productoActualizado.Id)
-                throw new ArgumentException("El ID de la URL no coincide con el del producto.");
-
-            if (string.IsNullOrWhiteSpace(productoActualizado.Nombre))
-                throw new ArgumentException("El nombre del producto es obligatorio.");
-
-            if (productoActualizado.Precio < 0 || productoActualizado.Descuento < 0)
-                throw new ArgumentException("El precio y el descuento no pueden ser negativos.");
-
-            if (productoActualizado.EsGratuito)
-            {
-                productoActualizado.Precio = 0;
-                productoActualizado.Descuento = 0;
-            }
-
-            var productoExistente = await _repository.ObtenerPorIdAsync(id);
-            if (productoExistente == null)
+            // 1. Buscamos el producto con sus tablas intermedias cargadas
+            var producto = await _repository.ObtenerParaEdicionAsync(id);
+            if (producto == null)
                 throw new KeyNotFoundException("El producto que intentas modificar no existe.");
 
-            // Nota: Aquí podrías mapear campo por campo si lo prefieres, 
-            // pero Update() en EF Core sobreescribirá todo el objeto.
-            return await _repository.ActualizarAsync(productoActualizado);
+            // 2. Actualizamos campos básicos
+            producto.Nombre = dto.Nombre;
+            producto.Descripcion = dto.Descripcion;
+            producto.Precio = dto.Precio;
+            producto.Descuento = dto.Descuento;
+            producto.EsGratuito = dto.EsGratuito;
+            producto.ImagenUrl = dto.ImagenUrl;
+            producto.Tipo = dto.Tipo;
+            producto.PdfUrl = dto.PdfUrl;
+            producto.VideoUrl = dto.VideoUrl;
+            producto.Activo = dto.Activo;
+            producto.CategoriaId = dto.CategoriaId;
+
+            // 3. Limpiamos las relaciones viejas y agregamos las nuevas
+            producto.CategoriasSecundarias.Clear();
+            foreach (var catId in dto.CategoriasSecundariasIds)
+            {
+                producto.CategoriasSecundarias.Add(new ProductoCategoriaSecundaria { CategoriaId = catId, ProductoId = id });
+            }
+
+            producto.ProductoTags.Clear();
+            foreach (var tagId in dto.TagsIds)
+            {
+                producto.ProductoTags.Add(new ProductoTag { TagId = tagId, ProductoId = id });
+            }
+
+            producto.ProductosRelacionadosOrigen.Clear();
+            foreach (var relId in dto.ProductosRelacionadosIds)
+            {
+                producto.ProductosRelacionadosOrigen.Add(new ProductoRelacionado { ProductoRelacionadoId = relId, ProductoOrigenId = id });
+            }
+
+            // 4. Guardamos
+            return await _repository.ActualizarAsync(producto);
         }
 
-        // 🔥 NUEVO: Eliminar producto
         public async Task<bool> EliminarAsync(int id)
         {
-            // Ojo de Arquitecto: Como tu clase Producto ya tiene la propiedad "Activo" (bool)[cite: 10], 
-            // a futuro podrías cambiar este método para hacer un "Soft Delete" (solo poner Activo = false) 
-            // en lugar de borrarlo físicamente, para no romper historiales de facturas.
             return await _repository.EliminarAsync(id);
+        }
+
+        // Método auxiliar centralizado para validaciones
+        private void ValidarReglasNegocio(ProductoDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Nombre)) throw new ArgumentException("El nombre es obligatorio.");
+            if (dto.Precio < 0 || dto.Descuento < 0) throw new ArgumentException("Precios no pueden ser negativos.");
+            if (dto.EsGratuito)
+            {
+                dto.Precio = 0;
+                dto.Descuento = 0;
+            }
         }
     }
 }
