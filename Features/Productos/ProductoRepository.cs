@@ -24,6 +24,7 @@ namespace TiempoBiblia.Api.Features.Productos
                 .Include(p => p.Categoria)
                 .Include(p => p.CategoriasSecundarias)
                 .Include(p => p.ProductoTags)
+                    .ThenInclude(pt => pt.Tag)
                 .Include(p => p.ProductosRelacionadosOrigen)
                 .AsNoTracking()
                 .ToListAsync();
@@ -37,7 +38,8 @@ namespace TiempoBiblia.Api.Features.Productos
             return await _context.Productos
                 .Where(p => p.Activo == true)
                 .Include(p => p.Categoria)
-                .Include(p => p.ProductoTags).ThenInclude(pt => pt.Tag)
+                .Include(p => p.ProductoTags)
+                    .ThenInclude(pt => pt.Tag)
                 .Include(p => p.ProductosRelacionadosOrigen)
                     .ThenInclude(pr => pr.ProductoRelacionadoDestino)
                 .AsNoTracking()
