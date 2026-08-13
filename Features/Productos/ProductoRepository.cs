@@ -38,6 +38,7 @@ namespace TiempoBiblia.Api.Features.Productos
             return await _context.Productos
                 .Where(p => p.Activo == true)
                 .Include(p => p.Categoria)
+                .Include(p => p.CategoriasSecundarias)
                 .Include(p => p.ProductoTags)
                     .ThenInclude(pt => pt.Tag)
                 .Include(p => p.ProductosRelacionadosOrigen)
