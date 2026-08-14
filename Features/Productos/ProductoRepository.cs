@@ -61,6 +61,7 @@ namespace TiempoBiblia.Api.Features.Productos
                 .Include(p => p.CategoriasSecundarias)
                 .Include(p => p.ProductoTags)
                 .Include(p => p.ProductosRelacionadosOrigen)
+                .ThenInclude(pr => pr.ProductoRelacionadoDestino)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
@@ -71,6 +72,7 @@ namespace TiempoBiblia.Api.Features.Productos
                 .Include(p => p.CategoriasSecundarias)
                 .Include(p => p.ProductoTags)
                 .Include(p => p.ProductosRelacionadosOrigen)
+                    .ThenInclude(pr => pr.ProductoRelacionadoDestino)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
