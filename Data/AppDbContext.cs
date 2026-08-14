@@ -15,6 +15,7 @@ namespace TiempoBiblia.Api.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Producto> Productos { get; set; }
+        public DbSet<ImagenProducto> ImagenesProductos { get; set; } // 🔥 LÍNEA NUEVA
         public DbSet<Categoria> Categorias { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<ProductoTag> ProductoTags { get; set; }

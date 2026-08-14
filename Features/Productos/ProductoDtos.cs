@@ -2,6 +2,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TiempoBiblia.Api.Features.Productos
 {
+    // 🔥 NUEVA CLASE PARA RECIBIR DATOS DEL FRONTEND
+    public class ImagenProductoDto
+    {
+        public int Id { get; set; }
+        public string Url { get; set; } = string.Empty;
+        public int ProductoId { get; set; }
+    }
+
     /// <summary>
     /// DTO utilizado para recibir los datos desde el Frontend al Crear o Editar un producto.
     /// Contiene los campos básicos y las listas de IDs para establecer las relaciones.
@@ -39,5 +47,6 @@ namespace TiempoBiblia.Api.Features.Productos
         public List<int> TagsIds { get; set; } = new();
         
         public List<int> ProductosRelacionadosIds { get; set; } = new();
+        public List<ImagenProductoDto> ImagenesSecundarias { get; set; } = new();
     }
 }

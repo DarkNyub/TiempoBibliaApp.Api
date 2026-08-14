@@ -26,6 +26,7 @@ namespace TiempoBiblia.Api.Features.Productos
                 .Include(p => p.ProductoTags)
                     .ThenInclude(pt => pt.Tag)
                 .Include(p => p.ProductosRelacionadosOrigen)
+                .Include(p => p.ImagenesSecundarias)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -43,6 +44,7 @@ namespace TiempoBiblia.Api.Features.Productos
                     .ThenInclude(pt => pt.Tag)
                 .Include(p => p.ProductosRelacionadosOrigen)
                     .ThenInclude(pr => pr.ProductoRelacionadoDestino)
+                .Include(p => p.ImagenesSecundarias)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -61,7 +63,8 @@ namespace TiempoBiblia.Api.Features.Productos
                 .Include(p => p.CategoriasSecundarias)
                 .Include(p => p.ProductoTags)
                 .Include(p => p.ProductosRelacionadosOrigen)
-                .ThenInclude(pr => pr.ProductoRelacionadoDestino)
+                    .ThenInclude(pr => pr.ProductoRelacionadoDestino)
+                .Include(p => p.ImagenesSecundarias)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
@@ -73,6 +76,7 @@ namespace TiempoBiblia.Api.Features.Productos
                 .Include(p => p.ProductoTags)
                 .Include(p => p.ProductosRelacionadosOrigen)
                     .ThenInclude(pr => pr.ProductoRelacionadoDestino)
+                .Include(p => p.ImagenesSecundarias)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 

@@ -46,5 +46,6 @@ namespace TiempoBiblia.Api.Features.Productos
         // Productos Relacionados (Cross-selling: "También te puede interesar...")
         public ICollection<ProductoRelacionado> ProductosRelacionadosOrigen { get; set; } = new List<ProductoRelacionado>();
         public ICollection<ProductoRelacionado> ProductosRelacionadosDestino { get; set; } = new List<ProductoRelacionado>();
+        public ICollection<ImagenProducto> ImagenesSecundarias { get; set; } = new List<ImagenProducto>();
     }
 }

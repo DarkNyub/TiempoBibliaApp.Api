@@ -39,7 +39,8 @@ namespace TiempoBiblia.Api.Features.Productos
                 // Mapeo mágico de relaciones
                 CategoriasSecundarias = dto.CategoriasSecundariasIds.Select(id => new ProductoCategoriaSecundaria { CategoriaId = id }).ToList(),
                 ProductoTags = dto.TagsIds.Select(id => new ProductoTag { TagId = id }).ToList(),
-                ProductosRelacionadosOrigen = dto.ProductosRelacionadosIds.Select(id => new ProductoRelacionado { ProductoRelacionadoId = id }).ToList()
+                ProductosRelacionadosOrigen = dto.ProductosRelacionadosIds.Select(id => new ProductoRelacionado { ProductoRelacionadoId = id }).ToList(),
+                ImagenesSecundarias = dto.ImagenesSecundarias.Select(img => new ImagenProducto { Url = img.Url }).ToList()
             };
 
             return await _repository.CrearAsync(producto);
@@ -85,6 +86,12 @@ namespace TiempoBiblia.Api.Features.Productos
             foreach (var relId in dto.ProductosRelacionadosIds)
             {
                 producto.ProductosRelacionadosOrigen.Add(new ProductoRelacionado { ProductoRelacionadoId = relId, ProductoOrigenId = id });
+            }
+            // 🔥 LIMPIAR Y ACTUALIZAR IMÁGENES
+            producto.ImagenesSecundarias.Clear();
+            foreach (var img in dto.ImagenesSecundarias)
+            {
+                producto.ImagenesSecundarias.Add(new ImagenProducto { Url = img.Url, ProductoId = id });
             }
 
             // 4. Guardamos
