@@ -86,10 +86,15 @@ namespace TiempoBiblia.Api.Features.Checkout
                     payload.CorreoCliente, idPago, "MercadoPago", franquicia, ultimos4, payload.ProductosIds);
 
                 var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
-                var links = tokens.Select(t => $"{baseUrl}/descargar/{t.Id}").ToList();
+                
+                // 🔥 NUEVO: Empaquetamos el Nombre del Producto y su Link de Descarga
+                var itemsDescarga = tokens.Select(t => (
+                    NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
+                    LinkDescarga: $"{baseUrl}/descargar/{t.Id}"
+                )).ToList();
 
-                // 🔥 Ahora _emailService sí existe
-                await _emailService.EnviarCorreoCompraAsync(payload.CorreoCliente, idPago, links);
+                // Disparamos el correo en silencio enviando la lista completa
+                await _emailService.EnviarCorreoCompraAsync(payload.CorreoCliente, idPago, itemsDescarga);
                 
                 return new RespuestaPagoBrickDto 
                 { 
