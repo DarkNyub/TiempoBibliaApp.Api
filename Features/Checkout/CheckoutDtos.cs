@@ -8,9 +8,17 @@ namespace TiempoBiblia.Api.Features.Checkout
     /// </summary>
     public class BrickPayloadDto
     {
-        public PagoBrickDto FormData { get; set; } = new();
+        // Ahora apunta a una clase que contiene la capa extra
+        public MpOuterFormDataDto FormData { get; set; } = new(); 
         public string CorreoCliente { get; set; } = string.Empty;
         public List<int> ProductosIds { get; set; } = new();
+    }
+
+    // 🔥 NUEVO: Atrapa la capa extra que envía Mercado Pago Bricks
+    public class MpOuterFormDataDto
+    {
+        public string paymentType { get; set; } = string.Empty;
+        public PagoBrickDto formData { get; set; } = new(); // Aquí viene el token real
     }
 
     /// <summary>

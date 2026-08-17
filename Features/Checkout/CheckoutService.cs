@@ -45,7 +45,8 @@ namespace TiempoBiblia.Api.Features.Checkout
 
         private async Task<RespuestaPagoBrickDto> ProcesarConMercadoPagoAsync(BrickPayloadDto payload)
         {
-            var request = payload.FormData;
+            // 🔥 SOLUCIÓN: Desempaquetamos la capa extra agregando ".formData"
+            var request = payload.FormData?.formData;
 
             if (request == null || string.IsNullOrEmpty(request.token))
             {
