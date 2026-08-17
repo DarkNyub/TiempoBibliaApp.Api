@@ -6,6 +6,8 @@ using TiempoBiblia.Api.Features.Productos;
 using TiempoBiblia.Api.Features.Tags;
 using TiempoBiblia.Api.Features.Descargas;
 using TiempoBiblia.Api.Features.Correos;
+using TiempoBiblia.Api.Features.Checkout; // 🔥 NUEVO: Para el Checkout
+using TiempoBiblia.Api.Features.Pedidos;  // 🔥 NUEVO: Para la Auditoría
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,10 +19,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 🔥 NUEVO: Registramos HttpClient para poder comunicarnos con Google Drive
+// Registramos HttpClient para poder comunicarnos con Google Drive
 builder.Services.AddHttpClient();
 
-// Registro de dependencias por Features (Clases concretas, sin interfaces)
+// Registro de dependencias por Features
 builder.Services.AddScoped<CategoriaRepository>();
 builder.Services.AddScoped<CategoriaService>();
 
@@ -33,32 +35,34 @@ builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<TagRepository>();
 builder.Services.AddScoped<TagService>();
 
-// 🔥 NUEVO: Registro de los servicios para la bóveda de Descargas Seguras
 builder.Services.AddScoped<DescargaRepository>();
 builder.Services.AddScoped<DescargaService>();
 
 builder.Services.AddScoped<EmailService>();
 
-// Controladores: Habilitamos la arquitectura MVC para APIs estructuradas
+// 🔥 NUEVO: REGISTRO DEL MOTOR DE PAGOS Y AUDITORÍA
+builder.Services.AddScoped<PedidoRepository>();
+builder.Services.AddScoped<CheckoutService>();
+
+// Controladores: Habilitamos la arquitectura MVC
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Evita el bucle infinito al serializar JSON con relaciones
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
-// 🔥 1. AGREGAMOS CORS AQUÍ (El pase VIP para tu Frontend) 🔥
+// 1. AGREGAMOS CORS AQUÍ (El pase VIP)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirFrontend", policy =>
     {
-        policy.AllowAnyOrigin()  // Permite peticiones desde cualquier origen
-              .AllowAnyMethod()  // Permite usar GET, POST, PUT, DELETE, etc.
-              .AllowAnyHeader(); // Permite cualquier cabecera de seguridad
+        policy.AllowAnyOrigin()  
+              .AllowAnyMethod()  
+              .AllowAnyHeader(); 
     });
 });
 
-// Documentación: Activamos Swagger para tener una UI de pruebas impecable
+// Documentación: Activamos Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -76,14 +80,12 @@ var app = builder.Build();
 // 2. PIPELINE HTTP (Middlewares)
 // ============================================================
 
-// Activamos Swagger UI cuando estamos en modo de desarrollo
 // if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c => 
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "TiempoBiblia API v1");
-        // Opcional pero recomendado: haz que Swagger sea la página principal en la nube
         c.RoutePrefix = string.Empty;
     });
 }
@@ -91,10 +93,9 @@ var app = builder.Build();
 // Redirección segura a HTTPS
 app.UseHttpsRedirection();
 
-// 🔥 2. ACTIVAMOS EL MIDDLEWARE DE CORS AQUÍ (¡Justo antes de MapControllers!) 🔥
+// 2. ACTIVAMOS EL MIDDLEWARE DE CORS AQUÍ
 app.UseCors("PermitirFrontend");
 
-// Mapeo automático de todos los controladores que crearemos
 app.MapControllers();
 
 app.Run();
