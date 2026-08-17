@@ -4,8 +4,8 @@ using TiempoBiblia.Api.Features.Categorias;
 using TiempoBiblia.Api.Features.Paquetes;
 using TiempoBiblia.Api.Features.Productos;
 using TiempoBiblia.Api.Features.Tags;
-// 🔥 NUEVO: Importamos el espacio de nombres de Descargas
 using TiempoBiblia.Api.Features.Descargas;
+using TiempoBiblia.Api.Features.Correos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +36,8 @@ builder.Services.AddScoped<TagService>();
 // 🔥 NUEVO: Registro de los servicios para la bóveda de Descargas Seguras
 builder.Services.AddScoped<DescargaRepository>();
 builder.Services.AddScoped<DescargaService>();
+
+builder.Services.AddScoped<EmailService>();
 
 // Controladores: Habilitamos la arquitectura MVC para APIs estructuradas
 builder.Services.AddControllers()

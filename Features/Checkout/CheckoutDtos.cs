@@ -1,12 +1,16 @@
 namespace TiempoBiblia.Api.Features.Checkout
 {
     /// <summary>
+    /// 🔥 NUEVO: Envoltorio principal que recibe el Backend desde el Carrito.
+    /// Ahora trae la tarjeta, el correo validado y los productos a facturar.
     /// Envoltorio principal para atrapar el JSON enviado por el frontend (Mercado Pago Bricks).
     /// Bricks encapsula los datos de pago dentro de un objeto llamado 'formData'.
     /// </summary>
     public class BrickPayloadDto
     {
-        public PagoBrickDto formData { get; set; } = new();
+        public PagoBrickDto FormData { get; set; } = new();
+        public string CorreoCliente { get; set; } = string.Empty;
+        public List<int> ProductosIds { get; set; } = new();
     }
 
     /// <summary>

@@ -78,29 +78,24 @@ namespace TiempoBiblia.Api.Features.Descargas
             return true;
         }
         /// <summary>
-        /// Procesa un carrito de compras completo, generando un token por cada producto.
+        /// Procesa la orden aprobada, guardando la auditoría completa y generando los tokens.
         /// </summary>
-        public async Task<List<TokenDescarga>> ProcesarPedidoAsync(string correoCliente, List<int> productosIds)
+        public async Task<List<TokenDescarga>> ProcesarPedidoAsync(
+            string correoCliente, 
+            string pagoId, 
+            string pasarela, 
+            string? franquicia, 
+            string? ultimos4, 
+            List<int> productosIds)
         {
-            var tokens = new List<TokenDescarga>();
-
-            foreach (var productoId in productosIds)
-            {
-                var nuevoToken = new TokenDescarga
-                {
-                    ProductoId = productoId,
-                    CorreoCliente = correoCliente,
-                    FechaCreacion = DateTime.UtcNow,
-                    FechaExpiracion = DateTime.UtcNow.AddDays(7), // 7 días para descargas compradas
-                    DescargasRealizadas = 0,
-                    LimiteDescargas = 2 // 2 intentos para evitar abusos
-                };
-
-                var tokenGuardado = await _repository.CrearTokenAsync(nuevoToken);
-                tokens.Add(tokenGuardado);
-            }
-
-            return tokens;
+            // 🔥 SOLUCIÓN CS8604: Evitamos nulos con el operador ??
+            return await _repository.GuardarPedidoYTokensAsync(
+                correoCliente, 
+                pagoId, 
+                pasarela, 
+                franquicia, 
+                ultimos4, 
+                productosIds ?? new List<int>()); 
         }
     }
 }

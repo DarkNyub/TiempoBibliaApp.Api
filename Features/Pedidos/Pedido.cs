@@ -44,10 +44,26 @@ namespace TiempoBiblia.Api.Features.Pedidos
         /// <summary>
         /// Correo al que se enviaron los enlaces. Permite nulos al inicio porque se llena 
         /// en la pantalla de éxito después de que el pago ya fue aprobado.
-        /// </summary>
-        [MaxLength(150)]
-        public string? CorreoCliente { get; set; } 
+        /// </summary>        
+        [Required, MaxLength(150)]
+        public string CorreoCliente { get; set; } = string.Empty; // 🔥 SOLUCIÓN CS8618
+
+        // ==========================================
+        // 🔥 NUEVOS CAMPOS: AUDITORÍA DE TARJETAS
+        // ==========================================
         
+        /// <summary>
+        /// Franquicia de la tarjeta usada (Ej. "visa", "master") o "paypal_balance"
+        /// Se deja nullable porque en pagos rechazados podría no llegar.
+        /// </summary>
+        [MaxLength(50)]
+        public string? Franquicia { get; set; } 
+        
+        /// <summary>
+        /// Últimos 4 dígitos de la tarjeta para rastreo y soporte a clientes.
+        /// </summary>
+        [MaxLength(4)]
+        public string? Ultimos4Digitos { get; set; }
         /// <summary>
         /// Fecha y hora exacta (UTC) en la que el banco aprobó la transacción.
         /// </summary>
