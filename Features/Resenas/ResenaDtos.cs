@@ -28,4 +28,11 @@ namespace TiempoBiblia.Api.Features.Resenas
         [MaxLength(1000)]
         public string Comentario { get; set; } = string.Empty;
     }
+    // DTO para recibir una calificación general que se aplicará a múltiples productos
+    public class CrearResenaGlobalDto
+    {
+        public int PedidoId { get; set; }
+        public int Calificacion { get; set; }
+        public string Comentario { get; set; } = string.Empty;
+    }
 }
