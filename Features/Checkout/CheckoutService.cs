@@ -139,7 +139,7 @@ namespace TiempoBiblia.Api.Features.Checkout
             var token = await GetPayPalAccessTokenAsync();
             
             // ⚠️ Ajusta tu tasa de cambio real aquí
-            decimal tasaCambio = 4000m; 
+            decimal tasaCambio = 3000m; 
             decimal totalUsd = Math.Round(totalCop / tasaCambio, 2);
             if (totalUsd <= 0) totalUsd = 1.00m; // PayPal exige un mínimo de $1 USD
 
