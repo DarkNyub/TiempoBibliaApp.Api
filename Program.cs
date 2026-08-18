@@ -49,6 +49,8 @@ builder.Services.AddScoped<CheckoutService>();
 builder.Services.AddScoped<ResenaRepository>();
 
 builder.Services.AddHostedService<ReviewWorker>();
+// 🔥 NUEVO: Registramos el servicio de imágenes con su propio HttpClient
+builder.Services.AddHttpClient<TiempoBiblia.Api.Features.Upload.ImagenService>();
 
 // Controladores: Habilitamos la arquitectura MVC
 builder.Services.AddControllers()
