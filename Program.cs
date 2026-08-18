@@ -8,6 +8,7 @@ using TiempoBiblia.Api.Features.Descargas;
 using TiempoBiblia.Api.Features.Correos;
 using TiempoBiblia.Api.Features.Checkout; // 🔥 NUEVO: Para el Checkout
 using TiempoBiblia.Api.Features.Pedidos;  // 🔥 NUEVO: Para la Auditoría
+using TiempoBiblia.Api.Features.Resenas;  // 🔥 NUEVO: Para las Reseñas
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +44,8 @@ builder.Services.AddScoped<EmailService>();
 // 🔥 NUEVO: REGISTRO DEL MOTOR DE PAGOS Y AUDITORÍA
 builder.Services.AddScoped<PedidoRepository>();
 builder.Services.AddScoped<CheckoutService>();
+
+builder.Services.AddScoped<ResenaRepository>();
 
 // Controladores: Habilitamos la arquitectura MVC
 builder.Services.AddControllers()

@@ -7,6 +7,7 @@ using TiempoBiblia.Api.Features.Relaciones;
 using TiempoBiblia.Api.Features.Descargas;
 using TiempoBiblia.Api.Features.Pedidos;
 using TiempoBiblia.Api.shared;
+using TiempoBiblia.Api.Features.Resenas;
 
 namespace TiempoBiblia.Api.Data
 {
@@ -26,6 +27,7 @@ namespace TiempoBiblia.Api.Data
         public DbSet<TokenDescarga> TokensDescarga { get; set; }
         public DbSet<Pedido> Pedidos { get; set; }
         public DbSet<PedidoDetalle> PedidoDetalles { get; set; }
+        public DbSet<Resena> Resenas { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
