@@ -87,10 +87,12 @@ namespace TiempoBiblia.Api.Features.Checkout
 
                 var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
                 
-                // 🔥 NUEVO: Empaquetamos el Nombre del Producto y su Link de Descarga
+                // 🔥 NUEVO: Ahora empaquetamos Nombre, Link, Imagen y Tutorial (VideoUrl)
                 var itemsDescarga = tokens.Select(t => (
                     NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
-                    LinkDescarga: $"{baseUrl}/descargar/{t.Id}"
+                    LinkDescarga: $"{baseUrl}/descargar/{t.Id}",
+                    ImagenUrl: string.IsNullOrEmpty(t.Producto?.ImagenUrl) ? $"{baseUrl}/images/default.jpg" : t.Producto.ImagenUrl,
+                    TutorialUrl: t.Producto?.VideoUrl ?? ""
                 )).ToList();
 
                 // Disparamos el correo en silencio enviando la lista completa

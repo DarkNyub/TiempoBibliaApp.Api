@@ -15,8 +15,8 @@ namespace TiempoBiblia.Api.Features.Correos
             _config = config;
         }
 
-        // 🔥 CAMBIO: Ahora recibimos una lista que contiene (NombreProducto, LinkDescarga)
-        public async Task EnviarCorreoCompraAsync(string destinatario, string numeroPedido, List<(string NombreProducto, string LinkDescarga)> itemsDescarga)
+        // 🔥 CAMBIO: Ahora recibimos la lista completa con Imagen y Tutorial
+        public async Task EnviarCorreoCompraAsync(string destinatario, string numeroPedido, List<(string NombreProducto, string LinkDescarga, string ImagenUrl, string TutorialUrl)> itemsDescarga)
         {
             string senderName = _config["SmtpConfig:SenderName"] ?? "TiempoBiblia-Luzy";
             string user = _config["SmtpConfig:User"] ?? "";
@@ -42,40 +42,62 @@ namespace TiempoBiblia.Api.Features.Correos
                         <ul style='list-style-type: none; padding: 0;'>
             ");
 
-            // 🔥 NUEVO: Recorremos los productos mostrando su Título y su Botón
+            // 🔥 NUEVO: Recorremos los productos mostrando Imagen, Título, Link y Tutorial
             foreach (var item in itemsDescarga)
             {
                 htmlBody.Append($@"
-                    <li style='margin-bottom: 25px; text-align: center; background-color: #FAFAFA; padding: 15px; border-radius: 12px; border: 1px solid #FCE4EC;'>
+                    <li style='margin-bottom: 25px; text-align: center; background-color: #FAFAFA; padding: 20px; border-radius: 12px; border: 1px solid #FCE4EC;'>
+                        <img src='{item.ImagenUrl}' alt='{item.NombreProducto}' style='width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);' />
+                        
                         <h4 style='color: #5D4037; margin: 0 0 15px 0; font-size: 16px;'>{item.NombreProducto}</h4>
-                        <a href='{item.LinkDescarga}' style='display: inline-block; background-color: #F48FB1; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold;'>
-                            ⬇️ Descargar Archivo
+                        
+                        <a href='{item.LinkDescarga}' style='display: inline-block; background-color: #F48FB1; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; margin-bottom: 10px;'>
+                            ⬇️ Descargar Archivo Seguro
                         </a>
-                    </li>
                 ");
+
+                // Si el producto tiene un link de YouTube o Instagram, lo mostramos
+                if (!string.IsNullOrEmpty(item.TutorialUrl))
+                {
+                    htmlBody.Append($@"
+                        <br/>
+                        <a href='{item.TutorialUrl}' target='_blank' style='display: inline-block; margin-top: 5px; color: #E91E63; text-decoration: underline; font-size: 14px; font-weight: bold;'>
+                            📺 Ver tutorial paso a paso
+                        </a>
+                    ");
+                }
+
+                htmlBody.Append("</li>");
             }
 
-            // 🔥 EL FOOTER DE LA OVEJITA (Usando tablas para compatibilidad total con Gmail/Outlook)
+            // 🔥 LA REGLA DE ORO + EL FOOTER DE LA OVEJITA
             htmlBody.Append($@"
                         </ul>
-                        <p style='color: #888; font-size: 13px; text-align: center; margin-top: 20px;'>
-                            Nota: Estos enlaces son personales y tienen un límite de descargas por seguridad.
+                        
+                        <div style='background-color: #FFF3E0; border-left: 4px solid #FFB74D; padding: 15px; margin-top: 25px; border-radius: 4px;'>
+                            <p style='color: #E65100; margin: 0; font-size: 14px; font-weight: bold; text-align: center;'>
+                                ⚠️ Recomendación importante:
+                            </p>
+                            <p style='color: #E65100; margin: 5px 0 0 0; font-size: 14px; text-align: center;'>
+                                Preferiblemente imprimir en <strong>opalina</strong> o <strong>papel fotográfico</strong> para garantizar la mejor calidad.
+                            </p>
+                        </div>
+
+                        <p style='color: #888; font-size: 12px; text-align: center; margin-top: 20px;'>
+                            Nota: Los enlaces de descarga son personales y tienen un límite de seguridad.
                         </p>
                     </div>
                     
                     <table width='100%' border='0' cellspacing='0' cellpadding='0' style='margin-top: 30px;'>
                         <tr>
-                            <td align='left' valign='bottom' style='width: 60px;'>
-                                <!-- Espacio vacío para equilibrar -->
-                            </td>
+                            <td align='left' valign='bottom' style='width: 60px;'></td>
                             <td align='center' valign='middle'>
                                 <p style='color: #999; font-size: 14px; font-weight: bold; margin: 0;'>
                                     TiempoBiblia-Luzy © {DateTime.Now.Year}
                                 </p>
                             </td>
                             <td align='right' valign='bottom' style='width: 60px;'>
-                                <!-- 🔥 REEMPLAZA EL SRC CON LA URL REAL DE TU OVEJITA -->
-                                <img src='https://tiempobiblia-luzy.online/images/logo_agradecimiento.png' alt='Ovejita' style='width: 60px; display: block;' />
+                                <img src='https://tiempobiblia-luzy.online/images/ovejita.png' alt='Ovejita' style='width: 60px; display: block;' />
                             </td>
                         </tr>
                     </table>
