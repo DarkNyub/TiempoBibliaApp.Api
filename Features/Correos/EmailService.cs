@@ -92,13 +92,12 @@ namespace TiempoBiblia.Api.Features.Correos
                         <tr>
                             <td align='left' valign='bottom' style='width: 60px;'></td>
                             <td align='center' valign='middle'>
+                                <img src='https://tiempobiblia-luzy.online/images/ovejitaagradecimiento.png' alt='Ovejita' style='width: 300px; display: block;' />
                                 <p style='color: #999; font-size: 14px; font-weight: bold; margin: 0;'>
                                     TiempoBiblia-Luzy © {DateTime.Now.Year}
                                 </p>
                             </td>
-                            <td align='right' valign='bottom' style='width: 60px;'>
-                                <img src='https://tiempobiblia-luzy.online/images/ovejitaagradecimiento.png' alt='Ovejita' style='width: 60px; display: block;' />
-                            </td>
+                            <td align='right' valign='bottom' style='width: 60px;'></td>
                         </tr>
                     </table>
                 </div>
