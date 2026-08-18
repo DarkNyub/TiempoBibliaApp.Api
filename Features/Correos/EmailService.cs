@@ -97,7 +97,7 @@ namespace TiempoBiblia.Api.Features.Correos
                                 </p>
                             </td>
                             <td align='right' valign='bottom' style='width: 60px;'>
-                                <img src='https://tiempobiblia-luzy.online/images/ovejita.png' alt='Ovejita' style='width: 60px; display: block;' />
+                                <img src='https://tiempobiblia-luzy.online/images/ovejitaagradecimiento.png' alt='Ovejita' style='width: 60px; display: block;' />
                             </td>
                         </tr>
                     </table>

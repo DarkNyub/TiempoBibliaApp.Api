@@ -89,6 +89,7 @@ namespace TiempoBiblia.Api.Features.Descargas
                 var token = new TokenDescarga
                 {
                     ProductoId = prod.Id,
+                    Producto = prod, // 🔥 NUEVO: Atamos la información del producto al token en memoria
                     CorreoCliente = correo,
                     FechaCreacion = DateTime.UtcNow,
                     FechaExpiracion = DateTime.UtcNow.AddDays(7), // 7 días de acceso
