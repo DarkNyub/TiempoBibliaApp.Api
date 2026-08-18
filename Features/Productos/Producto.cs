@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using TiempoBiblia.Api.Features.Categorias;
 using TiempoBiblia.Api.Features.Relaciones; 
+using TiempoBiblia.Api.Features.Resenas;
 
 namespace TiempoBiblia.Api.Features.Productos
 {
@@ -47,5 +48,6 @@ namespace TiempoBiblia.Api.Features.Productos
         public ICollection<ProductoRelacionado> ProductosRelacionadosOrigen { get; set; } = new List<ProductoRelacionado>();
         public ICollection<ProductoRelacionado> ProductosRelacionadosDestino { get; set; } = new List<ProductoRelacionado>();
         public ICollection<ImagenProducto> ImagenesSecundarias { get; set; } = new List<ImagenProducto>();
+        public ICollection<Resena> Resenas { get; set; } = new List<Resena>();
     }
 }

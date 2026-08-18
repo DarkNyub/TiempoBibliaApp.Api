@@ -17,10 +17,10 @@ namespace TiempoBiblia.Api.Features.Productos
         }
         
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Producto>>> GetPublico() => Ok(await _service.ObtenerActivosPublicoAsync());
+        public async Task<ActionResult<IEnumerable<ProductoDto>>> GetPublico() => Ok(await _service.ObtenerActivosPublicoAsync());
 
         [HttpGet("admin")]
-        public async Task<ActionResult<IEnumerable<Producto>>> GetAdmin() => Ok(await _service.ObtenerTodosAdminAsync());
+        public async Task<ActionResult<IEnumerable<ProductoDto>>> GetAdmin() => Ok(await _service.ObtenerTodosAdminAsync());
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Producto>> GetById(int id)

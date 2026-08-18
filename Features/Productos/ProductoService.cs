@@ -14,8 +14,8 @@ namespace TiempoBiblia.Api.Features.Productos
             _repository = repository;
         }
 
-        public async Task<List<Producto>> ObtenerTodosAdminAsync() => await _repository.ObtenerTodosAdminAsync();
-        public async Task<List<Producto>> ObtenerActivosPublicoAsync() => await _repository.ObtenerActivosPublicoAsync();
+       public async Task<List<ProductoDto>> ObtenerTodosAdminAsync() => await _repository.ObtenerTodosAdminAsync();
+        public async Task<List<ProductoDto>> ObtenerActivosPublicoAsync() => await _repository.ObtenerActivosPublicoAsync();
         public async Task<Producto?> ObtenerPorIdAsync(int id) => await _repository.ObtenerPorIdAsync(id);
 
         // 🔥 CREAR CON RELACIONES MÚLTIPLES

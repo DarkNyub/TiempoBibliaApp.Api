@@ -16,36 +16,70 @@ namespace TiempoBiblia.Api.Features.Productos
         }
 
         /// <summary>
-        /// Trae TODOS los productos para el panel de administración INCLUYENDO sus relaciones.
+        /// Trae TODOS los productos mapeados directamente a DTOs con la matemática ya calculada.
         /// </summary>
-        public async Task<List<Producto>> ObtenerTodosAdminAsync()
+        public async Task<List<ProductoDto>> ObtenerTodosAdminAsync()
         {
             return await _context.Productos
-                .Include(p => p.Categoria)
-                .Include(p => p.CategoriasSecundarias)
-                .Include(p => p.ProductoTags)
-                    .ThenInclude(pt => pt.Tag)
-                .Include(p => p.ProductosRelacionadosOrigen)
-                .Include(p => p.ImagenesSecundarias)
                 .AsNoTracking()
+                .Select(p => new ProductoDto
+                {
+                    Id = p.Id,
+                    Nombre = p.Nombre,
+                    Descripcion = p.Descripcion,
+                    Precio = p.Precio,
+                    Descuento = p.Descuento,
+                    EsGratuito = p.EsGratuito,
+                    ImagenUrl = p.ImagenUrl,
+                    Tipo = p.Tipo,
+                    PdfUrl = p.PdfUrl,
+                    VideoUrl = p.VideoUrl,
+                    Activo = p.Activo,
+                    CategoriaId = p.CategoriaId,
+                    // 🔥 LA MATEMÁTICA EN SQL: Promedia y redondea hacia arriba, o envía 5 si no hay reseñas
+                    PromedioCalificacion = p.Resenas.Any(r => r.Aprobada) 
+                        ? (int)Math.Ceiling(p.Resenas.Where(r => r.Aprobada).Average(r => r.Calificacion)) 
+                        : 5,
+                    TotalResenas = p.Resenas.Count(r => r.Aprobada),
+                    // Cargamos las imágenes secundarias (las otras relaciones las omites si no se usan en la tabla de admin)
+                    ImagenesSecundarias = p.ImagenesSecundarias.Select(img => new ImagenProductoDto { Url = img.Url }).ToList()
+                })
                 .ToListAsync();
         }
 
         /// <summary>
-        /// Trae los productos activos e INCLUYE sus relaciones principales para la tienda web.
+        /// Trae los productos activos para la tienda web, calculando el Social Proof.
         /// </summary>
-        public async Task<List<Producto>> ObtenerActivosPublicoAsync()
+        public async Task<List<ProductoDto>> ObtenerActivosPublicoAsync()
         {
             return await _context.Productos
                 .Where(p => p.Activo == true)
-                .Include(p => p.Categoria)
-                .Include(p => p.CategoriasSecundarias)
-                .Include(p => p.ProductoTags)
-                    .ThenInclude(pt => pt.Tag)
-                .Include(p => p.ProductosRelacionadosOrigen)
-                    .ThenInclude(pr => pr.ProductoRelacionadoDestino)
-                .Include(p => p.ImagenesSecundarias)
                 .AsNoTracking()
+                .Select(p => new ProductoDto
+                {
+                    Id = p.Id,
+                    Nombre = p.Nombre,
+                    Descripcion = p.Descripcion,
+                    Precio = p.Precio,
+                    Descuento = p.Descuento,
+                    EsGratuito = p.EsGratuito,
+                    ImagenUrl = p.ImagenUrl,
+                    Tipo = p.Tipo,
+                    PdfUrl = p.PdfUrl,
+                    VideoUrl = p.VideoUrl,
+                    Activo = p.Activo,
+                    CategoriaId = p.CategoriaId,
+                    // 🔥 LA MATEMÁTICA EN SQL
+                    PromedioCalificacion = p.Resenas.Any(r => r.Aprobada) 
+                        ? (int)Math.Ceiling(p.Resenas.Where(r => r.Aprobada).Average(r => r.Calificacion)) 
+                        : 5,
+                    TotalResenas = p.Resenas.Count(r => r.Aprobada),
+                    // Aquí llenamos las relaciones necesarias para el Home/Detalle
+                    CategoriasSecundariasIds = p.CategoriasSecundarias.Select(cs => cs.CategoriaId).ToList(),
+                    TagsIds = p.ProductoTags.Select(pt => pt.TagId).ToList(),
+                    ProductosRelacionadosIds = p.ProductosRelacionadosOrigen.Select(pr => pr.ProductoRelacionadoId).ToList(),
+                    ImagenesSecundarias = p.ImagenesSecundarias.Select(img => new ImagenProductoDto { Url = img.Url }).ToList()
+                })
                 .ToListAsync();
         }
 
