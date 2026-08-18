@@ -37,5 +37,36 @@ namespace TiempoBiblia.Api.Features.Checkout
                 return StatusCode(500, new { mensaje = "Error interno del servidor", detalle = ex.Message });
             }
         }
+        [HttpPost("paypal/crear")]
+        public async Task<IActionResult> CrearOrdenPayPal([FromBody] SolicitudPagoDto solicitud)
+        {
+            try
+            {
+                // El servicio crea la orden en PayPal y nos devuelve el ID
+                var orderId = await _checkoutService.CrearOrdenPayPalAsync(solicitud.TotalAPagar);
+                return Ok(new RespuestaPagoDto { UrlPago = orderId }); 
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error al conectar con PayPal", detalle = ex.Message });
+            }
+        }
+
+        [HttpPost("procesar-pago-paypal")]
+        public async Task<IActionResult> ProcesarPagoPayPal([FromBody] CapturaPayPalRequestDto payload)
+        {
+            try
+            {
+                // El servicio captura el dinero y envía los correos
+                var resultado = await _checkoutService.ProcesarConPayPalAsync(payload.OrderId, payload.CorreoCliente, payload.ProductosIds);
+                
+                if (resultado.Aprobado) return Ok(resultado);
+                return BadRequest(resultado);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error interno del servidor", detalle = ex.Message });
+            }
+        }
     }
 }

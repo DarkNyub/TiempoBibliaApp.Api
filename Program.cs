@@ -74,6 +74,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddHttpClient();
+
 var app = builder.Build();
 
 // ============================================================

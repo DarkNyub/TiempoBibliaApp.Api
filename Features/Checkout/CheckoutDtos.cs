@@ -76,4 +76,24 @@ namespace TiempoBiblia.Api.Features.Checkout
         public string IdPago { get; set; } = string.Empty;
         public string Mensaje { get; set; } = string.Empty;
     }
+    // 🔥 NUEVOS DTOs PARA PAYPAL
+    public class SolicitudPagoDto
+    {
+        public string Titulo { get; set; } = string.Empty;
+        public decimal TotalAPagar { get; set; }
+        public string CorreoCliente { get; set; } = string.Empty;
+        public List<int> ProductosIds { get; set; } = new();
+    }
+
+    public class RespuestaPagoDto
+    {
+        public string UrlPago { get; set; } = string.Empty;
+    }
+
+    public class CapturaPayPalRequestDto
+    {
+        public string OrderId { get; set; } = string.Empty;
+        public string CorreoCliente { get; set; } = string.Empty;
+        public List<int> ProductosIds { get; set; } = new();
+    }
 }
