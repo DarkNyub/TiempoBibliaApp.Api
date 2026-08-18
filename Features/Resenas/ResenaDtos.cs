@@ -32,6 +32,7 @@ namespace TiempoBiblia.Api.Features.Resenas
     public class CrearResenaGlobalDto
     {
         public int PedidoId { get; set; }
+        public string NombreCliente { get; set; } = string.Empty;
         public int Calificacion { get; set; }
         public string Comentario { get; set; } = string.Empty;
     }

@@ -49,7 +49,7 @@ namespace TiempoBiblia.Api.Features.Resenas
             if (dto.Calificacion < 1 || dto.Calificacion > 5)
                 return BadRequest(new { mensaje = "Calificación inválida." });
 
-            await _repository.MultiplicarResenaGlobalAsync(dto.PedidoId, dto.Calificacion, dto.Comentario);
+            await _repository.MultiplicarResenaGlobalAsync(dto.PedidoId, dto.NombreCliente, dto.Calificacion, dto.Comentario);
             
             return Ok(new { mensaje = "¡Tus reseñas han sido publicadas con éxito!" });
         }

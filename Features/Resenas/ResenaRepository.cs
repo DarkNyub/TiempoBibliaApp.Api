@@ -43,7 +43,7 @@ namespace TiempoBiblia.Api.Features.Resenas
         /// <summary>
         /// Toma una reseña general de un pedido y la clona para cada producto comprado.
         /// </summary>
-        public async Task MultiplicarResenaGlobalAsync(int pedidoId, int calificacion, string comentario)
+        public async Task MultiplicarResenaGlobalAsync(int pedidoId, string nombreCliente, int calificacion, string comentario)
         {
             // Buscamos el pedido con sus productos
             var pedido = await _context.Pedidos
@@ -58,7 +58,7 @@ namespace TiempoBiblia.Api.Features.Resenas
                 var resena = new Resena
                 {
                     ProductoId = detalle.ProductoId,
-                    NombreCliente = "Anónimo", // Mantienes el anonimato como pediste
+                    NombreCliente = string.IsNullOrWhiteSpace(nombreCliente) ? "Anónimo" : nombreCliente, // Mantienes el anonimato como pediste
                     Calificacion = calificacion,
                     Comentario = string.IsNullOrWhiteSpace(comentario) ? "¡Excelente recurso!" : comentario,
                     FechaCreacion = DateTime.UtcNow,
