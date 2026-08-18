@@ -51,7 +51,7 @@ namespace TiempoBiblia.Api.Features.Correos
                         
                         <h4 style='color: #5D4037; margin: 0 0 15px 0; font-size: 16px;'>{item.NombreProducto}</h4>
                         
-                        <a href='{item.LinkDescarga}' style='display: inline-block; background-color: #F48FB1; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; margin-bottom: 10px;'>
+                        <a href='{item.LinkDescarga}?nombre={item.NombreProducto}' style='display: inline-block; background-color: #F48FB1; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; margin-bottom: 10px;'>
                             ⬇️ Descargar Archivo Seguro
                         </a>
                 ");
