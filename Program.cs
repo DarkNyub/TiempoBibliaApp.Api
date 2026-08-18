@@ -9,6 +9,7 @@ using TiempoBiblia.Api.Features.Correos;
 using TiempoBiblia.Api.Features.Checkout; // 🔥 NUEVO: Para el Checkout
 using TiempoBiblia.Api.Features.Pedidos;  // 🔥 NUEVO: Para la Auditoría
 using TiempoBiblia.Api.Features.Resenas;  // 🔥 NUEVO: Para las Reseñas
+using TiempoBiblia.Api.Workers; // 🔥 NUEVO: Para el Worker de Fidelización
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,8 @@ builder.Services.AddScoped<PedidoRepository>();
 builder.Services.AddScoped<CheckoutService>();
 
 builder.Services.AddScoped<ResenaRepository>();
+
+builder.Services.AddHostedService<ReviewWorker>();
 
 // Controladores: Habilitamos la arquitectura MVC
 builder.Services.AddControllers()

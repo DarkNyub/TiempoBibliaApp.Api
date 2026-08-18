@@ -68,6 +68,10 @@ namespace TiempoBiblia.Api.Features.Pedidos
         /// Fecha y hora exacta (UTC) en la que el banco aprobó la transacción.
         /// </summary>
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+        /// <summary>
+        /// Indica si ya se le envió el correo automático de 48 horas pidiendo la reseña.
+        /// </summary>
+        public bool EncuestaEnviada { get; set; } = false;
 
         // Relación 1 a Muchos: Un pedido tiene varios detalles (productos comprados)
         public ICollection<PedidoDetalle> Detalles { get; set; } = new List<PedidoDetalle>();

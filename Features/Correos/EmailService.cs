@@ -117,5 +117,80 @@ namespace TiempoBiblia.Api.Features.Correos
                 await smtp.DisconnectAsync(true);
             }
         }
+        // 🔥 NUEVO: CORREO DE FIDELIZACIÓN (A LAS 48 HORAS)
+        public async Task EnviarCorreoFidelizacionAsync(string destinatario, int pedidoId, List<string> nombresProductos)
+        {
+            string senderName = _config["SmtpConfig:SenderName"] ?? "TiempoBiblia-Luzy";
+            string user = _config["SmtpConfig:User"] ?? "";
+            string host = _config["SmtpConfig:Host"] ?? "";
+            string pass = _config["SmtpConfig:Password"] ?? "";
+            int port = int.Parse(_config["SmtpConfig:Port"] ?? "587");
+            
+            var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
+
+            var email = new MimeMessage();
+            email.From.Add(new MailboxAddress(senderName, user));
+            email.To.Add(MailboxAddress.Parse(destinatario));
+            email.Subject = "¿Qué te parecieron tus recursos? Nos encantaría saberlo 💖";
+
+            var htmlBody = new StringBuilder();
+            htmlBody.Append($@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #FFF0F5; padding: 30px; border-radius: 15px; text-align: center;'>
+                    
+                    <!-- 🔥 LOGO DE LA TIENDA -->
+                    <img src='{baseUrl}/images/tiempobiblia.luzy.png' alt='Tiempo Biblia' style='max-width: 200px; margin-bottom: 20px;' />
+
+                    <h2 style='color: #E91E63; margin-bottom: 10px;'>¡Hola! Han pasado un par de días...</h2>
+                    <p style='color: #5D4037; font-size: 16px; margin-bottom: 20px;'>
+                        Esperamos que estés disfrutando y sacándole el máximo provecho a estos recursos:
+                    </p>
+
+                    <!-- LISTA DE PRODUCTOS -->
+                    <div style='background-color: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; text-align: left;'>
+                        <ul style='color: #5D4037; margin: 0; padding-left: 20px;'>");
+            
+            foreach (var nombre in nombresProductos)
+            {
+                htmlBody.Append($"<li style='margin-bottom: 5px;'><strong>{nombre}</strong></li>");
+            }
+
+            htmlBody.Append($@"
+                        </ul>
+                    </div>
+
+                    <p style='color: #5D4037; font-size: 16px; margin-bottom: 15px;'>
+                        <strong>¿Nos regalarías unos segundos para calificarlos?</strong><br/>
+                        Haz clic en una estrella para dejarnos tu opinión anónima:
+                    </p>
+
+                    <!-- 🔥 LAS 5 ESTRELLAS CLICABLES (ONE-CLICK REVIEW) -->
+                    <div style='font-size: 40px; margin-bottom: 30px;'>
+                        <a href='{baseUrl}/calificar/{pedidoId}?estrellas=1' style='text-decoration: none;'>⭐</a>
+                        <a href='{baseUrl}/calificar/{pedidoId}?estrellas=2' style='text-decoration: none;'>⭐</a>
+                        <a href='{baseUrl}/calificar/{pedidoId}?estrellas=3' style='text-decoration: none;'>⭐</a>
+                        <a href='{baseUrl}/calificar/{pedidoId}?estrellas=4' style='text-decoration: none;'>⭐</a>
+                        <a href='{baseUrl}/calificar/{pedidoId}?estrellas=5' style='text-decoration: none;'>⭐</a>
+                    </div>
+
+                    <p style='color: #888; font-size: 12px; margin-top: 20px;'>
+                        Tu opinión ayuda a que más personas conecten con la Palabra de Dios. ¡Gracias!
+                    </p>
+                </div>
+            ");
+
+            email.Body = new TextPart(TextFormat.Html) { Text = htmlBody.ToString() };
+
+            using var smtp = new SmtpClient();
+            try
+            {
+                await smtp.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+                await smtp.AuthenticateAsync(user, pass);
+                await smtp.SendAsync(email);
+            }
+            finally
+            {
+                await smtp.DisconnectAsync(true);
+            }
+        }
     }
 }
