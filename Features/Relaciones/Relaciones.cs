@@ -40,4 +40,15 @@ namespace TiempoBiblia.Api.Features.Relaciones
         public int CategoriaId { get; set; }
         public Categoria Categoria { get; set; } = null!;
     }
+    public class ProductoRelacionadoDto
+    {
+        public int ProductoRelacionadoId { get; set; }
+        public ProductoDto ProductoRelacionadoDestino { get; set; } = new();
+    }
+
+    public class TagDto
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
 }

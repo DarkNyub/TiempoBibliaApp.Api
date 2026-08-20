@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using TiempoBiblia.Api.Features.Categorias;
+using TiempoBiblia.Api.Features.Tags;
+using TiempoBiblia.Api.Features.Relaciones;
 
 namespace TiempoBiblia.Api.Features.Productos
 {
@@ -49,5 +51,25 @@ namespace TiempoBiblia.Api.Features.Productos
         public List<int> TagsIds { get; set; } = new();
         public List<int> ProductosRelacionadosIds { get; set; } = new();
         public List<ImagenProductoDto> ImagenesSecundarias { get; set; } = new();
+        public List<ProductoRelacionadoDto> ProductosRelacionadosOrigen { get; set; } = new();
+        public List<ProductoTagDto> ProductoTags { get; set; } = new();
+    }
+    
+    public class ProductoRelacionadoDto
+    {
+        public int ProductoRelacionadoId { get; set; }
+        public ProductoDto ProductoRelacionadoDestino { get; set; } = new();
+    }
+
+    public class TagDto
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    public class ProductoTagDto
+    {
+        public int TagId { get; set; }
+        public TagDto Tag { get; set; } = new();
     }
 }

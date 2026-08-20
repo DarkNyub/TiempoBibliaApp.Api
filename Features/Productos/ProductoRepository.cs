@@ -85,7 +85,29 @@ namespace TiempoBiblia.Api.Features.Productos
                     CategoriasSecundariasIds = p.CategoriasSecundarias.Select(cs => cs.CategoriaId).ToList(),
                     TagsIds = p.ProductoTags.Select(pt => pt.TagId).ToList(),
                     ProductosRelacionadosIds = p.ProductosRelacionadosOrigen.Select(pr => pr.ProductoRelacionadoId).ToList(),
-                    ImagenesSecundarias = p.ImagenesSecundarias.Select(img => new ImagenProductoDto { Url = img.Url }).ToList()
+                    ImagenesSecundarias = p.ImagenesSecundarias.Select(img => new ImagenProductoDto { Url = img.Url }).ToList(),
+                    ProductoTags = p.ProductoTags.Select(pt => new ProductoTagDto
+                    {
+                        TagId = pt.TagId,
+                        Tag = new TagDto { Id = pt.Tag.Id, Nombre = pt.Tag.Nombre }
+                    }).ToList(),
+                    ProductosRelacionadosOrigen = p.ProductosRelacionadosOrigen
+                        .Where(pr => pr.ProductoRelacionadoDestino.Activo) // Que no sugiera productos apagados
+                        .Select(pr => new ProductoRelacionadoDto
+                        {
+                            ProductoRelacionadoId = pr.ProductoRelacionadoId,
+                            ProductoRelacionadoDestino = new ProductoDto
+                            {
+                                Id = pr.ProductoRelacionadoDestino.Id,
+                                Nombre = pr.ProductoRelacionadoDestino.Nombre,
+                                ImagenUrl = pr.ProductoRelacionadoDestino.ImagenUrl,
+                                Precio = pr.ProductoRelacionadoDestino.Precio,
+                                EsGratuito = pr.ProductoRelacionadoDestino.EsGratuito,
+                                PromedioCalificacion = p.Resenas.Any(r => r.Aprobada) 
+                                    ? (int)Math.Ceiling(p.Resenas.Where(r => r.Aprobada).Average(r => r.Calificacion)) 
+                                    : 5
+                            }
+                        }).ToList()
                 })
                 .ToListAsync();
         }
