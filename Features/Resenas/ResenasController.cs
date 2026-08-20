@@ -6,51 +6,52 @@ namespace TiempoBiblia.Api.Features.Resenas
     [ApiController]
     public class ResenasController : ControllerBase
     {
-        private readonly ResenaRepository _repository;
+        private readonly ResenaService _service;
 
-        public ResenasController(ResenaRepository repository)
+        public ResenasController(ResenaService service)
         {
-            _repository = repository;
+            _service = service;
         }
 
-        // GET: api/resenas/producto/5
         [HttpGet("producto/{productoId}")]
-        public async Task<IActionResult> GetResenasPorProducto(int productoId)
+        public async Task<IActionResult> GetResenasPorProducto(int productoId) => 
+            Ok(await _service.ObtenerPorProductoAsync(productoId));
+
+        [HttpGet("admin/producto/{productoId}")]
+        public async Task<IActionResult> GetResenasAdmin(int productoId) => 
+            Ok(await _service.ObtenerTodasAdminAsync(productoId));
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> CambiarEstado(int id, [FromBody] ResenaDto dto)
         {
-            var resenas = await _repository.ObtenerPorProductoAsync(productoId);
-            return Ok(resenas);
+            await _service.ActualizarEstadoAsync(id, dto.Aprobada);
+            return Ok();
         }
 
-        // POST: api/resenas
+        [HttpGet("aprobar/{id}")]
+        public async Task<ContentResult> AprobarDesdeCorreo(int id)
+        {
+            await _service.ActualizarEstadoAsync(id, true);
+            string html = "<div style='text-align:center; padding: 50px; font-family: Arial;'><h1 style='color: #4CAF50;'>¡Reseña Aprobada!</h1><p>Ya es visible en la tienda de Luzy.</p></div>";
+            return new ContentResult { ContentType = "text/html", StatusCode = 200, Content = html };
+        }
+
         [HttpPost]
         public async Task<IActionResult> CrearResena([FromBody] CrearResenaDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var nuevaResena = new Resena
-            {
-                ProductoId = dto.ProductoId,
-                NombreCliente = dto.NombreCliente,
-                Calificacion = dto.Calificacion,
-                Comentario = dto.Comentario,
-                FechaCreacion = DateTime.UtcNow,
-                Aprobada = true 
-            };
-
-            await _repository.GuardarAsync(nuevaResena);
-            
-            return Ok(new { mensaje = "¡Gracias por tu reseña! Ayudará a muchas personas." });
+            await _service.CrearResenaAsync(dto);
+            return Ok(new { mensaje = "¡Reseña enviada y en espera de moderación!" });
         }
-        // POST: api/resenas/global
+
         [HttpPost("global")]
         public async Task<IActionResult> CrearResenaGlobal([FromBody] CrearResenaGlobalDto dto)
         {
             if (dto.Calificacion < 1 || dto.Calificacion > 5)
                 return BadRequest(new { mensaje = "Calificación inválida." });
 
-            await _repository.MultiplicarResenaGlobalAsync(dto.PedidoId, dto.NombreCliente, dto.Calificacion, dto.Comentario);
-            
+            await _service.CrearResenaGlobalAsync(dto);
             return Ok(new { mensaje = "¡Tus reseñas han sido publicadas con éxito!" });
         }
     }

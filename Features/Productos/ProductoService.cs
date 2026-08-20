@@ -28,6 +28,7 @@ namespace TiempoBiblia.Api.Features.Productos
                 Nombre = dto.Nombre,
                 Descripcion = dto.Descripcion,
                 Precio = dto.Precio,
+                PrecioUsd = dto.PrecioUsd,
                 Descuento = dto.Descuento,
                 EsGratuito = dto.EsGratuito,
                 ImagenUrl = dto.ImagenUrl,
@@ -60,6 +61,7 @@ namespace TiempoBiblia.Api.Features.Productos
             producto.Nombre = dto.Nombre;
             producto.Descripcion = dto.Descripcion;
             producto.Precio = dto.Precio;
+            producto.PrecioUsd = dto.PrecioUsd;
             producto.Descuento = dto.Descuento;
             producto.EsGratuito = dto.EsGratuito;
             producto.ImagenUrl = dto.ImagenUrl;

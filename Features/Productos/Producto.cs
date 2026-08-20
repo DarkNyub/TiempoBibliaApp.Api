@@ -18,6 +18,7 @@ namespace TiempoBiblia.Api.Features.Productos
         public string Descripcion { get; set; } = "";
         
         public decimal Precio { get; set; }
+        public decimal PrecioUsd { get; set; } // 🔥 NUEVO: Precio en dólares
 
         public decimal Descuento { get; set; } = 0;
         

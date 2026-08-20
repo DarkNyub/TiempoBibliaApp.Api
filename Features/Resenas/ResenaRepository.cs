@@ -26,10 +26,30 @@ namespace TiempoBiblia.Api.Features.Resenas
                     NombreCliente = r.NombreCliente,
                     Calificacion = r.Calificacion,
                     Comentario = r.Comentario,
+                    Aprobada = r.Aprobada,
                     FechaCreacion = r.FechaCreacion
                 })
                 .AsNoTracking() // Optimización para lectura rápida
                 .ToListAsync();
+        }
+        // 🔥 NUEVO: Para el panel de control (Muestra TODAS, incluidas las inactivas)
+        public async Task<List<ResenaDto>> ObtenerTodasAdminAsync(int productoId)
+        {
+            return await _context.Resenas
+                .Where(r => r.ProductoId == productoId)
+                .OrderByDescending(r => r.FechaCreacion)
+                .Select(r => new ResenaDto { Id = r.Id, NombreCliente = r.NombreCliente, Calificacion = r.Calificacion, Comentario = r.Comentario, FechaCreacion = r.FechaCreacion, Aprobada = r.Aprobada })
+                .AsNoTracking().ToListAsync();
+        }
+        // 🔥 NUEVO: Para prender/apagar desde el Panel o el Correo
+        public async Task ActualizarEstadoAsync(int id, bool estado)
+        {
+            var resena = await _context.Resenas.FindAsync(id);
+            if (resena != null)
+            {
+                resena.Aprobada = estado;
+                await _context.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -62,7 +82,7 @@ namespace TiempoBiblia.Api.Features.Resenas
                     Calificacion = calificacion,
                     Comentario = string.IsNullOrWhiteSpace(comentario) ? "¡Excelente recurso!" : comentario,
                     FechaCreacion = DateTime.UtcNow,
-                    Aprobada = true
+                    Aprobada = false
                 };
                 
                 _context.Resenas.Add(resena);

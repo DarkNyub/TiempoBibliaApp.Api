@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TiempoBiblia.Api.Data;
+using TiempoBiblia.Api.Features.Categorias;
 
 namespace TiempoBiblia.Api.Features.Productos
 {
@@ -28,6 +29,7 @@ namespace TiempoBiblia.Api.Features.Productos
                     Nombre = p.Nombre,
                     Descripcion = p.Descripcion,
                     Precio = p.Precio,
+                    PrecioUsd = p.PrecioUsd,
                     Descuento = p.Descuento,
                     EsGratuito = p.EsGratuito,
                     ImagenUrl = p.ImagenUrl,
@@ -36,6 +38,8 @@ namespace TiempoBiblia.Api.Features.Productos
                     VideoUrl = p.VideoUrl,
                     Activo = p.Activo,
                     CategoriaId = p.CategoriaId,
+                    // 🔥 PUNTO 1: Mapeo manual del objeto Categoría (Entity Framework hace el JOIN automático)
+                    Categoria = new CategoriaDto { Id = p.Categoria.Id, Nombre = p.Categoria.Nombre },
                     // 🔥 LA MATEMÁTICA EN SQL: Promedia y redondea hacia arriba, o envía 5 si no hay reseñas
                     PromedioCalificacion = p.Resenas.Any(r => r.Aprobada) 
                         ? (int)Math.Ceiling(p.Resenas.Where(r => r.Aprobada).Average(r => r.Calificacion)) 
@@ -61,6 +65,7 @@ namespace TiempoBiblia.Api.Features.Productos
                     Nombre = p.Nombre,
                     Descripcion = p.Descripcion,
                     Precio = p.Precio,
+                    PrecioUsd = p.PrecioUsd,
                     Descuento = p.Descuento,
                     EsGratuito = p.EsGratuito,
                     ImagenUrl = p.ImagenUrl,
@@ -69,6 +74,8 @@ namespace TiempoBiblia.Api.Features.Productos
                     VideoUrl = p.VideoUrl,
                     Activo = p.Activo,
                     CategoriaId = p.CategoriaId,
+                    // 🔥 PUNTO 1: Mapeo manual del objeto Categoría (Entity Framework hace el JOIN automático)
+                    Categoria = new CategoriaDto { Id = p.Categoria.Id, Nombre = p.Categoria.Nombre },
                     // 🔥 LA MATEMÁTICA EN SQL
                     PromedioCalificacion = p.Resenas.Any(r => r.Aprobada) 
                         ? (int)Math.Ceiling(p.Resenas.Where(r => r.Aprobada).Average(r => r.Calificacion)) 

@@ -9,6 +9,7 @@ namespace TiempoBiblia.Api.Features.Resenas
         public string NombreCliente { get; set; } = string.Empty;
         public int Calificacion { get; set; }
         public string Comentario { get; set; } = string.Empty;
+        public bool Aprobada { get; set; }
         public DateTime FechaCreacion { get; set; }
     }
 
@@ -27,6 +28,7 @@ namespace TiempoBiblia.Api.Features.Resenas
         [Required(ErrorMessage = "Por favor, cuéntanos qué te pareció el recurso.")]
         [MaxLength(1000)]
         public string Comentario { get; set; } = string.Empty;
+        public bool Aprobada { get; set; }= false;
     }
     // DTO para recibir una calificación general que se aplicará a múltiples productos
     public class CrearResenaGlobalDto
@@ -35,5 +37,6 @@ namespace TiempoBiblia.Api.Features.Resenas
         public string NombreCliente { get; set; } = string.Empty;
         public int Calificacion { get; set; }
         public string Comentario { get; set; } = string.Empty;
+        public bool Aprobada { get; set; }= false;
     }
 }

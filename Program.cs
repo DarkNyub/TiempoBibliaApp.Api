@@ -47,6 +47,7 @@ builder.Services.AddScoped<PedidoRepository>();
 builder.Services.AddScoped<CheckoutService>();
 
 builder.Services.AddScoped<ResenaRepository>();
+builder.Services.AddScoped<ResenaService>();
 
 builder.Services.AddHostedService<ReviewWorker>();
 // 🔥 NUEVO: Registramos el servicio de imágenes con su propio HttpClient

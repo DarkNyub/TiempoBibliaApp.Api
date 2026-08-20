@@ -3,6 +3,7 @@ using MailKit.Security;
 using MimeKit;
 using MimeKit.Text;
 using System.Text;
+using TiempoBiblia.Api.Features.Resenas; // 🔥 LÍNEA NUEVA: Para que reconozca qué es "Resena"
 
 namespace TiempoBiblia.Api.Features.Correos
 {
@@ -191,6 +192,35 @@ namespace TiempoBiblia.Api.Features.Correos
             {
                 await smtp.DisconnectAsync(true);
             }
+        }
+        // 🔥 NUEVO: Alerta de moderación
+        public async Task EnviarAlertaNuevaResenaAsync(string correoAdmin, Resena resena, string apiUrl)
+        {
+            var email = new MimeMessage();
+            email.From.Add(new MailboxAddress("Sistema TiendaBiblia-Luzy", _config["SmtpConfig:User"]!));
+            email.To.Add(MailboxAddress.Parse(correoAdmin));
+            email.Subject = $"⚠️ Nueva Reseña de {resena.NombreCliente} ({resena.Calificacion} Estrellas)";
+
+            string linkAprobar = $"{apiUrl}/api/resenas/aprobar/{resena.Id}";
+
+            var body = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>
+                    <h2 style='color: #E91E63;'>Tienes una reseña pendiente de moderación</h2>
+                    <p><strong>Cliente:</strong> {resena.NombreCliente}</p>
+                    <p><strong>Calificación:</strong> {resena.Calificacion}/5 ⭐</p>
+                    <p><strong>Comentario:</strong> <em>""{resena.Comentario}""</em></p>
+                    <br/>
+                    <a href='{linkAprobar}' style='background-color: #4CAF50; color: white; padding: 15px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>✅ APROBAR Y PUBLICAR</a>
+                    <p style='color: #999; font-size: 12px; margin-top: 20px;'>Si no deseas publicarla, ignora este correo.</p>
+                </div>";
+
+            email.Body = new TextPart(TextFormat.Html) { Text = body };
+
+            using var smtp = new SmtpClient();
+            await smtp.ConnectAsync(_config["SmtpConfig:Host"]!, int.Parse(_config["SmtpConfig:Port"]!), SecureSocketOptions.StartTls);
+            await smtp.AuthenticateAsync(_config["SmtpConfig:User"]!, _config["SmtpConfig:Password"]!);
+            await smtp.SendAsync(email);
+            await smtp.DisconnectAsync(true);
         }
     }
 }
