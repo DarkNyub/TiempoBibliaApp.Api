@@ -86,16 +86,19 @@ namespace TiempoBiblia.Api.Features.Descargas
             string pasarela, 
             string? franquicia, 
             string? ultimos4, 
-            List<int> productosIds)
+            List<int> productosIds,
+            decimal totalCobrado, // 🔥 NUEVO: Recibimos el monto
+            string moneda)        // 🔥 NUEVO: Recibimos la divisa
         {
-            // 🔥 SOLUCIÓN CS8604: Evitamos nulos con el operador ??
             return await _repository.GuardarPedidoYTokensAsync(
                 correoCliente, 
                 pagoId, 
                 pasarela, 
                 franquicia, 
                 ultimos4, 
-                productosIds ?? new List<int>()); 
+                productosIds ?? new List<int>(),
+                totalCobrado, // 🔥 Pasamos al repo
+                moneda);      // 🔥 Pasamos al repo
         }
     }
 }

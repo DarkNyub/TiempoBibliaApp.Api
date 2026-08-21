@@ -84,7 +84,9 @@ namespace TiempoBiblia.Api.Features.Checkout
                 string idPago = payment.Id?.ToString() ?? Guid.NewGuid().ToString();
 
                 var tokens = await _descargaService.ProcesarPedidoAsync(
-                    payload.CorreoCliente, idPago, "MercadoPago", franquicia, ultimos4, payload.ProductosIds);
+                    payload.CorreoCliente, idPago, "MercadoPago", franquicia, ultimos4, payload.ProductosIds,
+                    request.transaction_amount, // 🔥 Le pasamos lo que cobró MercadoPago
+                    "COP");                     // 🔥 Le decimos que fue en Pesos
 
                 var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
                 
@@ -134,13 +136,11 @@ namespace TiempoBiblia.Api.Features.Checkout
         /// <summary>
         /// Paso 1: Crea la orden en PayPal (solo retorna el ID de la orden).
         /// </summary>
-        public async Task<string> CrearOrdenPayPalAsync(decimal totalCop)
+        public async Task<string> CrearOrdenPayPalAsync(decimal totalUsd) // 🔥 Ahora recibe USD directamente
         {
             var token = await GetPayPalAccessTokenAsync();
             
-            // ⚠️ Ajusta tu tasa de cambio real aquí
-            decimal tasaCambio = 3000m; 
-            decimal totalUsd = Math.Round(totalCop / tasaCambio, 2);
+            // 🔥 FIX: Eliminamos la tasa de cambio quemada. Usamos el valor real que mandó el Frontend.
             if (totalUsd <= 0) totalUsd = 1.00m; // PayPal exige un mínimo de $1 USD
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{GetPayPalBaseUrl()}/v2/checkout/orders");
@@ -153,7 +153,7 @@ namespace TiempoBiblia.Api.Features.Checkout
                 {
                     new {
                         amount = new { currency_code = "USD", value = totalUsd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) },
-                        description = "Recursos Digitales - Tiempo Biblia"
+                        description = "Recursos Digitales - TiempoBiblia-Luzy"
                     }
                 }
             };
@@ -184,15 +184,18 @@ namespace TiempoBiblia.Api.Features.Checkout
                 var json = await response.Content.ReadFromJsonAsync<JsonElement>();
                 if (json.GetProperty("status").GetString() == "COMPLETED")
                 {
-                    // Extraemos el ID de transacción real de PayPal
-                    var captureId = json.GetProperty("purchase_units")[0]
-                                        .GetProperty("payments")
-                                        .GetProperty("captures")[0]
-                                        .GetProperty("id").GetString()!;
+                    // 🔥 Extraemos el ID y el monto real cobrado por PayPal
+                    var captureNode = json.GetProperty("purchase_units")[0].GetProperty("payments").GetProperty("captures")[0];
+                    var captureId = captureNode.GetProperty("id").GetString()!;
+                    
+                    var amountString = captureNode.GetProperty("amount").GetProperty("value").GetString()!;
+                    decimal totalCobradoUsd = decimal.Parse(amountString, System.Globalization.CultureInfo.InvariantCulture);
 
                     // 🔥 GUARDADO ATÓMICO Y ENVÍO DE CORREO
                     var tokens = await _descargaService.ProcesarPedidoAsync(
-                        correoCliente, captureId, "PayPal", "paypal_balance", null, productosIds);
+                        correoCliente, captureId, "PayPal", "paypal_balance", null, productosIds,
+                        totalCobradoUsd, // 🔥 Le pasamos el monto en Dólares
+                        "USD");          // 🔥 Le decimos que la moneda es USD
 
                     var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
                     

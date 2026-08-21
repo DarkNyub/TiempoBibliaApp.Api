@@ -144,7 +144,9 @@ namespace TiempoBiblia.Api.Features.Descargas
                     pasarela: "Desconocida", 
                     franquicia: null, 
                     ultimos4: null, 
-                    productosIds: request.ProductosIds ?? new List<int>() // Evita CS8604
+                    productosIds: request.ProductosIds ?? new List<int>(),
+                    totalCobrado: 0, // 🔥 Fallback por defecto
+                    moneda: "COP"    // 🔥 Fallback por defecto
                 );
 
                 var baseUrl = _configuration["FrontendSettings:BaseUrl"]?.TrimEnd('/') ?? "https://tiempobiblia-luzy.online";
