@@ -29,7 +29,7 @@ namespace TiempoBiblia.Api.Features.Correos
             var email = new MimeMessage();
             email.From.Add(new MailboxAddress(senderName, user));
             email.To.Add(MailboxAddress.Parse(dest));
-            email.Subject = $"¡Tu compra fue exitosa! 🎉 Pedido #{numeroPedido.Substring(0, Math.Min(numeroPedido.Length, 8))}...";
+            email.Subject = $"TiempoBiblia - Luzy ¡Tu compra fue exitosa! 🎉 Pedido #{numeroPedido.Substring(0, Math.Min(numeroPedido.Length, 8))}...";
 
             var htmlBody = new StringBuilder();
             htmlBody.Append(@"
@@ -132,7 +132,7 @@ namespace TiempoBiblia.Api.Features.Correos
             var email = new MimeMessage();
             email.From.Add(new MailboxAddress(senderName, user));
             email.To.Add(MailboxAddress.Parse(destinatario));
-            email.Subject = "¿Qué te parecieron tus recursos? Nos encantaría saberlo 💖";
+            email.Subject = "TiempoBiblia - Luzy ¿Qué te parecieron tus recursos? Nos encantaría saberlo 💖";
 
             var htmlBody = new StringBuilder();
             htmlBody.Append($@"
@@ -199,7 +199,7 @@ namespace TiempoBiblia.Api.Features.Correos
             var email = new MimeMessage();
             email.From.Add(new MailboxAddress("Sistema TiendaBiblia-Luzy", _config["SmtpConfig:User"]!));
             email.To.Add(MailboxAddress.Parse(correoAdmin));
-            email.Subject = $"⚠️ Nueva Reseña de {resena.NombreCliente} ({resena.Calificacion} Estrellas)";
+            email.Subject = $"TiempoBiblia - Luzy ⚠️ Nueva Reseña de {resena.NombreCliente} ({resena.Calificacion} Estrellas)";
 
             string linkAprobar = $"{apiUrl}/api/resenas/aprobar/{resena.Id}";
 
