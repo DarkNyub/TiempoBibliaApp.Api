@@ -51,16 +51,24 @@ namespace TiempoBiblia.Api.Features.Checkout
         private async Task<RespuestaPagoBrickDto> ProcesarConMercadoPagoAsync(BrickPayloadDto payload)
         {
             var request = payload.FormData?.formData;
+            var paymentType = payload.FormData?.paymentType; // 🔥 Extraemos el tipo de pago
 
-            if (request == null || string.IsNullOrEmpty(request.token))
+            if (request == null)
+                return new RespuestaPagoBrickDto { Aprobado = false, Mensaje = "Datos de pago vacíos." };
+
+            // 🔥 1. VALIDACIÓN INTELIGENTE: Solo exigimos token si es Tarjeta. PSE no usa token.
+            bool esTarjeta = paymentType == "credit_card" || paymentType == "debit_card";
+            if (esTarjeta && string.IsNullOrEmpty(request.token))
                 return new RespuestaPagoBrickDto { Aprobado = false, Mensaje = "El token de la tarjeta es inválido." };
+
+            var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
 
             var paymentRequest = new PaymentCreateRequest
             {
                 TransactionAmount = request.transaction_amount,
-                Token = request.token,
+                Token = esTarjeta ? request.token : null, // Solo mandamos token para tarjetas
                 Description = "Recursos Digitales - Tiempo Biblia",
-                Installments = request.installments,
+                Installments = request.installments > 0 ? request.installments : 1, // PSE no usa cuotas
                 PaymentMethodId = request.payment_method_id,
                 IssuerId = request.issuer_id,
                 Payer = new PaymentPayerRequest
@@ -71,12 +79,15 @@ namespace TiempoBiblia.Api.Features.Checkout
                         Type = request.payer.identification.type,
                         Number = request.payer.identification.number
                     }
-                }
+                },
+                // 🔥 2. CLAVE PARA PSE: A dónde regresa el cliente después de ir al banco
+                CallbackUrl = $"{baseUrl}/resultado-pago"
             };
 
             var client = new PaymentClient();
             Payment payment = await client.CreateAsync(paymentRequest);
 
+            // 🔥 3. SI ES TARJETA (Se aprueba al instante)
             if (payment.Status == "approved")
             {
                 string franquicia = payment.PaymentMethodId;
@@ -85,11 +96,8 @@ namespace TiempoBiblia.Api.Features.Checkout
 
                 var tokens = await _descargaService.ProcesarPedidoAsync(
                     payload.CorreoCliente, idPago, "MercadoPago", franquicia, ultimos4, payload.ProductosIds,
-                    request.transaction_amount, // 🔥 Le pasamos lo que cobró MercadoPago
-                    "COP");                     // 🔥 Le decimos que fue en Pesos
+                    request.transaction_amount, "COP");
 
-                var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
-                
                 var itemsDescarga = tokens.Select(t => (
                     NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
                     LinkDescarga: $"{baseUrl}/descargar/{t.Id}",
@@ -100,6 +108,17 @@ namespace TiempoBiblia.Api.Features.Checkout
                 await _emailService.EnviarCorreoCompraAsync(payload.CorreoCliente, idPago, itemsDescarga);
                 
                 return new RespuestaPagoBrickDto { Aprobado = true, Estado = payment.Status, IdPago = idPago, Mensaje = "¡Pago procesado con éxito!" };
+            }
+            // 🔥 4. SI ES PSE (El estado inicial en MP siempre es "pending")
+            else if (payment.Status == "pending" && payment.TransactionDetails?.ExternalResourceUrl != null)
+            {
+                return new RespuestaPagoBrickDto 
+                { 
+                    Aprobado = true, // Lo marcamos "true" para que no salte el error rojo en el Carrito
+                    Estado = "pending", 
+                    IdPago = payment.Id?.ToString() ?? "", 
+                    UrlRedireccion = payment.TransactionDetails.ExternalResourceUrl // La URL para abrir PSE/Nequi
+                };
             }
             
             return new RespuestaPagoBrickDto { Aprobado = false, Estado = payment.Status ?? "Rechazado", Mensaje = "El pago fue rechazado." };

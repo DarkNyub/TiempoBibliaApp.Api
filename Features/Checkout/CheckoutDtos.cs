@@ -75,6 +75,7 @@ namespace TiempoBiblia.Api.Features.Checkout
         public string Estado { get; set; } = string.Empty;
         public string IdPago { get; set; } = string.Empty;
         public string Mensaje { get; set; } = string.Empty;
+        public string UrlRedireccion { get; set; } = string.Empty; // 🔥 NUEVO PARA PSE
     }
     // 🔥 NUEVOS DTOs PARA PAYPAL
     public class SolicitudPagoDto
