@@ -35,7 +35,7 @@ namespace TiempoBiblia.Api.Features.Checkout
         public string payment_method_id { get; set; } = string.Empty;
         
         /// <summary>ID del banco emisor de la tarjeta.</summary>
-        public string issuer_id { get; set; } = string.Empty; 
+        public string? issuer_id { get; set; }
         
         /// <summary>Monto total exacto a cobrar al cliente.</summary>
         public decimal transaction_amount { get; set; }
@@ -45,6 +45,9 @@ namespace TiempoBiblia.Api.Features.Checkout
         
         /// <summary>Información personal del pagador (correo y documento).</summary>
         public PayerDto payer { get; set; } = new();
+        
+        // 🔥 2. Atrapa los detalles de PSE (ej. código del banco)
+        public TransactionDetailsDto? transaction_details { get; set; }
     }
 
     /// <summary>
@@ -53,6 +56,8 @@ namespace TiempoBiblia.Api.Features.Checkout
     public class PayerDto
     {
         public string email { get; set; } = string.Empty;
+        // 🔥 3. Atrapa el tipo de persona (individual o jurídica), requerido por PSE
+        public string entity_type { get; set; } = string.Empty;
         public IdentificationDto identification { get; set; } = new();
     }
 
@@ -63,6 +68,10 @@ namespace TiempoBiblia.Api.Features.Checkout
     {
         public string type { get; set; } = string.Empty;
         public string number { get; set; } = string.Empty;
+    }
+    public class TransactionDetailsDto
+    {
+        public string financial_institution { get; set; } = string.Empty;
     }
 
     /// <summary>

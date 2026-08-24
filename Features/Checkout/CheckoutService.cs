@@ -70,10 +70,11 @@ namespace TiempoBiblia.Api.Features.Checkout
                 Description = "Recursos Digitales - Tiempo Biblia",
                 Installments = request.installments > 0 ? request.installments : 1, // PSE no usa cuotas
                 PaymentMethodId = request.payment_method_id,
-                IssuerId = request.issuer_id,
+                IssuerId = string.IsNullOrWhiteSpace(request.issuer_id) ? null : request.issuer_id,
                 Payer = new PaymentPayerRequest
                 {
                     Email = request.payer.email,
+                    EntityType = string.IsNullOrWhiteSpace(request.payer.entity_type) ? null : request.payer.entity_type,
                     Identification = new IdentificationRequest 
                     {
                         Type = request.payer.identification.type,
@@ -83,6 +84,15 @@ namespace TiempoBiblia.Api.Features.Checkout
                 // 🔥 2. CLAVE PARA PSE: A dónde regresa el cliente después de ir al banco
                 CallbackUrl = $"{baseUrl}/resultado-pago"
             };
+
+            // 🔥 NUEVO: Si trae datos del banco (PSE), se los agregamos al request
+            if (request.transaction_details != null && !string.IsNullOrWhiteSpace(request.transaction_details.financial_institution))
+            {
+                paymentRequest.TransactionDetails = new PaymentTransactionDetailsRequest
+                {
+                    FinancialInstitution = request.transaction_details.financial_institution
+                };
+            }
 
             var client = new PaymentClient();
             Payment payment = await client.CreateAsync(paymentRequest);
