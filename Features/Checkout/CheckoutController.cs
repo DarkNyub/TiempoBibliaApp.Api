@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using TiempoBiblia.Api.Features.Checkout;
 
 namespace TiempoBiblia.Api.Features.Checkout
 {
@@ -66,6 +67,20 @@ namespace TiempoBiblia.Api.Features.Checkout
             catch (Exception ex)
             {
                 return StatusCode(500, new { mensaje = "Error interno del servidor", detalle = ex.Message });
+            }
+        }
+
+        [HttpPost("procesar-gratis")]
+        public async Task<IActionResult> ProcesarPedidoGratis([FromBody] SolicitudPedidoGratisDto solicitud)
+        {
+            try
+            {
+                var resultado = await _checkoutService.ProcesarPedidoGratisAsync(solicitud);
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error al procesar pedido gratuito", detalle = ex.Message });
             }
         }
     }

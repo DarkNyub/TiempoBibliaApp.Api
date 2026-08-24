@@ -220,5 +220,47 @@ namespace TiempoBiblia.Api.Features.Checkout
 
             return new RespuestaPagoBrickDto { Aprobado = false, Mensaje = "El pago no pudo ser capturado por PayPal." };
         }
+        // ==============================================================================
+        // 🔥 LÓGICA DE PEDIDOS GRATUITOS (TOTAL $0)
+        // ==============================================================================
+        public async Task<RespuestaPagoBrickDto> ProcesarPedidoGratisAsync(SolicitudPedidoGratisDto request)
+        {
+            if (string.IsNullOrWhiteSpace(request.CorreoCliente) || !request.ProductosIds.Any())
+                throw new ArgumentException("Faltan datos para procesar el pedido gratuito.");
+
+            // 1. Generamos un ID de transacción único para auditoría
+            string idPago = $"FREE-{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}";
+
+            // 2. Registramos en BD reutilizando tu flujo blindado (Monto: 0, Pasarela: "Gratuito")
+            var tokens = await _descargaService.ProcesarPedidoAsync(
+                request.CorreoCliente, 
+                idPago, 
+                "Gratuito", 
+                "N/A", 
+                null, 
+                request.ProductosIds,
+                0m,     // 🔥 Total cobrado es 0
+                "COP"   // Divisa base
+            );
+
+            // 3. Preparamos y enviamos el correo exactamente igual que en compras reales
+            var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
+            var itemsDescarga = tokens.Select(t => (
+                NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
+                LinkDescarga: $"{baseUrl}/descargar/{t.Id}",
+                ImagenUrl: string.IsNullOrEmpty(t.Producto?.ImagenUrl) ? $"{baseUrl}/images/default.jpg" : t.Producto.ImagenUrl,
+                TutorialUrl: t.Producto?.VideoUrl ?? ""
+            )).ToList();
+
+            await _emailService.EnviarCorreoCompraAsync(request.CorreoCliente, idPago, itemsDescarga);
+
+            return new RespuestaPagoBrickDto 
+            { 
+                Aprobado = true, 
+                Estado = "approved", 
+                IdPago = idPago, 
+                Mensaje = "¡Pedido gratuito procesado y enviado con éxito!" 
+            };
+        }
     }
 }

@@ -96,4 +96,10 @@ namespace TiempoBiblia.Api.Features.Checkout
         public string CorreoCliente { get; set; } = string.Empty;
         public List<int> ProductosIds { get; set; } = new();
     }
+
+    public class SolicitudPedidoGratisDto 
+    {
+        public string CorreoCliente { get; set; } = string.Empty;
+        public List<int> ProductosIds { get; set; } = new();
+    }
 }
