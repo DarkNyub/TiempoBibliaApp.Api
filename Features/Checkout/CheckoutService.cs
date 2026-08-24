@@ -34,13 +34,14 @@ namespace TiempoBiblia.Api.Features.Checkout
         // ==============================================================================
         // 🔥 ENRUTADOR PRINCIPAL
         // ==============================================================================
-        public async Task<RespuestaPagoBrickDto> ProcesarPagoGenericoAsync(string pasarela, BrickPayloadDto payload)
+        // 🔥 Agregamos el parámetro ipCliente (con un valor por defecto por si acaso)
+        public async Task<RespuestaPagoBrickDto> ProcesarPagoGenericoAsync(string pasarela, BrickPayloadDto payload, string ipCliente = "127.0.0.1")
         {
             if (payload == null || string.IsNullOrWhiteSpace(payload.CorreoCliente) || !payload.ProductosIds.Any())
                 throw new ArgumentException("Datos incompletos. Faltan productos o el correo del cliente.");
 
             if (pasarela.Equals("MercadoPago", StringComparison.OrdinalIgnoreCase))
-                return await ProcesarConMercadoPagoAsync(payload);
+                return await ProcesarConMercadoPagoAsync(payload, ipCliente); // 🔥 Le pasamos la IP aquí
             
             throw new ArgumentException($"La pasarela '{pasarela}' no está soportada en este enrutador.");
         }
@@ -48,7 +49,7 @@ namespace TiempoBiblia.Api.Features.Checkout
         // ==============================================================================
         // 🔥 LÓGICA DE MERCADO PAGO
         // ==============================================================================
-        private async Task<RespuestaPagoBrickDto> ProcesarConMercadoPagoAsync(BrickPayloadDto payload)
+        private async Task<RespuestaPagoBrickDto> ProcesarConMercadoPagoAsync(BrickPayloadDto payload, string ipCliente)
         {
             var request = payload.FormData?.formData;
             var paymentType = payload.FormData?.paymentType; // 🔥 Extraemos el tipo de pago
@@ -82,7 +83,13 @@ namespace TiempoBiblia.Api.Features.Checkout
                     }
                 },
                 // 🔥 2. CLAVE PARA PSE: A dónde regresa el cliente después de ir al banco
-                CallbackUrl = $"{baseUrl}/resultado-pago"
+                CallbackUrl = $"{baseUrl}/resultado-pago",
+
+                // 🔥 EL ARREGLO MÁGICO: Le mandamos la IP obligatoria para PSE
+                AdditionalInfo = new PaymentAdditionalInfoRequest
+                {
+                    IpAddress = ipCliente
+                }
             };
 
             // 🔥 NUEVO: Si trae datos del banco (PSE), se los agregamos al request

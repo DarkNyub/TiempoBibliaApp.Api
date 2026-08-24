@@ -19,9 +19,14 @@ namespace TiempoBiblia.Api.Features.Checkout
         {
             try
             {
-                // Le pasamos la data genérica al servicio indicándole que use "MercadoPago"
-                var resultado = await _checkoutService.ProcesarPagoGenericoAsync("MercadoPago", payloadWrapper);
+                // 🔥 NUEVO: Capturamos la IP real del cliente que está haciendo la petición
+                string ipCliente = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+                
+                // Si estás probando en localhost, a veces llega en formato IPv6 (::1). Lo pasamos a IPv4.
+                if (ipCliente == "::1") ipCliente = "127.0.0.1";
 
+                // Le pasamos la IP al servicio
+                var resultado = await _checkoutService.ProcesarPagoGenericoAsync("MercadoPago", payloadWrapper, ipCliente);
                 if (resultado.Aprobado)
                 {
                     return Ok(resultado);
