@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TiempoBiblia.Api.Features.Checkout;
+using TiempoBiblia.Api.Data;       // 🔥 Para que reconozca tu AppDbContext
 
 namespace TiempoBiblia.Api.Features.Checkout
 {
@@ -86,6 +87,23 @@ namespace TiempoBiblia.Api.Features.Checkout
             catch (Exception ex)
             {
                 return StatusCode(500, new { mensaje = "Error al procesar pedido gratuito", detalle = ex.Message });
+            }
+        }
+        [HttpPost("webhook")]
+        public async Task<IActionResult> WebhookMercadoPago([FromBody] WebhookMpDto payload, [FromServices] AppDbContext context)
+        {
+            try
+            {
+                // Disparamos la lógica en segundo plano sin hacer esperar a Mercado Pago
+                _ = _checkoutService.ProcesarWebhookMercadoPagoAsync(payload, context);
+                
+                // Mercado Pago exige que le respondas "200 OK" rápidamente
+                return Ok(new { recibido = true }); 
+            }
+            catch (Exception ex)
+            {
+                // Aún si hay error nuestro, le devolvemos OK a MP para que no reintente locamente
+                return Ok(new { error = ex.Message }); 
             }
         }
     }

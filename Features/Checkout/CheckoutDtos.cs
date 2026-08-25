@@ -112,4 +112,16 @@ namespace TiempoBiblia.Api.Features.Checkout
         public string CorreoCliente { get; set; } = string.Empty;
         public List<int> ProductosIds { get; set; } = new();
     }
+    // 🔥 NUEVOS DTOs PARA EL WEBHOOK DE MERCADO PAGO
+    public class WebhookMpDto
+    {
+        public string action { get; set; } = string.Empty;
+        public string type { get; set; } = string.Empty;
+        public DataMp data { get; set; } = new();
+    }
+
+    public class DataMp
+    {
+        public string id { get; set; } = string.Empty;
+    }
 }

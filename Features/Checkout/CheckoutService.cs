@@ -7,6 +7,8 @@ using TiempoBiblia.Api.Features.Correos;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore; // 🔥 Para poder usar el .AnyAsync()
+using TiempoBiblia.Api.Data;       // 🔥 Para que reconozca tu AppDbContext
 
 namespace TiempoBiblia.Api.Features.Checkout
 {
@@ -52,47 +54,79 @@ namespace TiempoBiblia.Api.Features.Checkout
         private async Task<RespuestaPagoBrickDto> ProcesarConMercadoPagoAsync(BrickPayloadDto payload, string ipCliente)
         {
             var request = payload.FormData?.formData;
-            var paymentType = payload.FormData?.paymentType; // 🔥 Extraemos el tipo de pago
+            var paymentType = payload.FormData?.paymentType;
 
             if (request == null)
                 return new RespuestaPagoBrickDto { Aprobado = false, Mensaje = "Datos de pago vacíos." };
 
-            // 🔥 1. VALIDACIÓN INTELIGENTE: Solo exigimos token si es Tarjeta. PSE no usa token.
+            // Verificamos si es tarjeta para exigir o no el token
             bool esTarjeta = paymentType == "credit_card" || paymentType == "debit_card";
             if (esTarjeta && string.IsNullOrEmpty(request.token))
                 return new RespuestaPagoBrickDto { Aprobado = false, Mensaje = "El token de la tarjeta es inválido." };
 
             var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
 
+            // ==============================================================================
+            // 🔥 CONSTRUCCIÓN DEL REQUEST A MERCADO PAGO
+            // ==============================================================================
             var paymentRequest = new PaymentCreateRequest
             {
                 TransactionAmount = request.transaction_amount,
-                Token = esTarjeta ? request.token : null, // Solo mandamos token para tarjetas
+                Token = esTarjeta ? request.token : null,
                 Description = "Recursos Digitales - Tiempo Biblia",
-                Installments = request.installments > 0 ? request.installments : 1, // PSE no usa cuotas
+                Installments = request.installments > 0 ? request.installments : 1,
                 PaymentMethodId = request.payment_method_id,
                 IssuerId = string.IsNullOrWhiteSpace(request.issuer_id) ? null : request.issuer_id,
+                
+                // 🔥 EL EQUIPAJE SECRETO: Guardamos qué compró y su correo
+                Metadata = new Dictionary<string, object>
+                {
+                    { "correo", payload.CorreoCliente },
+                    { "productos", string.Join(",", payload.ProductosIds) }
+                },
+                // Redirección post-pago PSE
+                CallbackUrl = $"{baseUrl}/resultado-pago", 
+                
+                // IP Obligatoria para transferencias bancarias (PSE)
+                AdditionalInfo = new PaymentAdditionalInfoRequest
+                {
+                    IpAddress = ipCliente 
+                },
+                
+
+                // 🔥 CONFIGURACIÓN DEL PAGADOR (PAYER)
                 Payer = new PaymentPayerRequest
                 {
+                    // 1. Datos REALES (Vienen del formulario del usuario)
                     Email = request.payer.email,
-                    EntityType = string.IsNullOrWhiteSpace(request.payer.entity_type) ? null : request.payer.entity_type,
+                    EntityType = string.IsNullOrWhiteSpace(request.payer.entity_type) ? "individual" : request.payer.entity_type,
                     Identification = new IdentificationRequest 
                     {
                         Type = request.payer.identification.type,
                         Number = request.payer.identification.number
+                    },
+                    
+                    // 2. Datos QUEMADOS (Para satisfacer las estrictas reglas de PSE sin molestar al cliente)
+                    FirstName = "Lector",
+                    LastName = "Tiempo Biblia",
+                    Phone = new PaymentPayerPhoneRequest
+                    {
+                        AreaCode = "57",
+                        Number = "3214725847" // Número genérico de 10 dígitos
+                    },
+                    Address = new PaymentPayerAddressRequest
+                    {
+                        ZipCode = "111156",          // Código postal genérico (Bogotá)
+                        StreetName = "Calle Virtual",// Requerido por PSE
+                        StreetNumber = 123,        // Requerido por PSE
+                        Neighborhood = "Centro",     // Requerido por PSE
+                        City = "Bogotá",             // Requerido por PSE
+                        FederalUnit = "Bogotá D.C."  // Departamento/Estado
                     }
-                },
-                // 🔥 2. CLAVE PARA PSE: A dónde regresa el cliente después de ir al banco
-                CallbackUrl = $"{baseUrl}/resultado-pago",
-
-                // 🔥 EL ARREGLO MÁGICO: Le mandamos la IP obligatoria para PSE
-                AdditionalInfo = new PaymentAdditionalInfoRequest
-                {
-                    IpAddress = ipCliente
                 }
             };
 
-            // 🔥 NUEVO: Si trae datos del banco (PSE), se los agregamos al request
+            // 🔥 Si es PSE, agregamos el código del banco (Institución Financiera)
             if (request.transaction_details != null && !string.IsNullOrWhiteSpace(request.transaction_details.financial_institution))
             {
                 paymentRequest.TransactionDetails = new PaymentTransactionDetailsRequest
@@ -104,7 +138,11 @@ namespace TiempoBiblia.Api.Features.Checkout
             var client = new PaymentClient();
             Payment payment = await client.CreateAsync(paymentRequest);
 
-            // 🔥 3. SI ES TARJETA (Se aprueba al instante)
+            // ==============================================================================
+            // 🔥 MANEJO DE LA RESPUESTA DE MERCADO PAGO
+            // ==============================================================================
+            
+            // 1. SI ES TARJETA (Se aprueba al instante)
             if (payment.Status == "approved")
             {
                 string franquicia = payment.PaymentMethodId;
@@ -126,15 +164,15 @@ namespace TiempoBiblia.Api.Features.Checkout
                 
                 return new RespuestaPagoBrickDto { Aprobado = true, Estado = payment.Status, IdPago = idPago, Mensaje = "¡Pago procesado con éxito!" };
             }
-            // 🔥 4. SI ES PSE (El estado inicial en MP siempre es "pending")
+            // 2. SI ES PSE (El estado es "pending" y requiere redirección al banco)
             else if (payment.Status == "pending" && payment.TransactionDetails?.ExternalResourceUrl != null)
             {
                 return new RespuestaPagoBrickDto 
                 { 
-                    Aprobado = true, // Lo marcamos "true" para que no salte el error rojo en el Carrito
+                    Aprobado = true, 
                     Estado = "pending", 
                     IdPago = payment.Id?.ToString() ?? "", 
-                    UrlRedireccion = payment.TransactionDetails.ExternalResourceUrl // La URL para abrir PSE/Nequi
+                    UrlRedireccion = payment.TransactionDetails.ExternalResourceUrl 
                 };
             }
             
@@ -297,6 +335,59 @@ namespace TiempoBiblia.Api.Features.Checkout
                 IdPago = idPago, 
                 Mensaje = "¡Pedido gratuito procesado y enviado con éxito!" 
             };
+        }
+        // ==============================================================================
+        // 🔥 WEBHOOK: ESCUCHA DE PAGOS ASÍNCRONOS (PSE)
+        // ==============================================================================
+        public async Task ProcesarWebhookMercadoPagoAsync(WebhookMpDto webhook, AppDbContext _context)
+        {
+            // MercadoPago envía avisos de pagos nuevos o actualizados
+            if (webhook.type == "payment" || webhook.action == "payment.updated" || webhook.action == "payment.created")
+            {
+                if (long.TryParse(webhook.data.id, out long paymentId))
+                {
+                    var client = new PaymentClient();
+                    Payment payment = await client.GetAsync(paymentId); // Preguntamos a MP el estado real
+
+                    // Si ya está aprobado, procedemos a despachar
+                    if (payment.Status == "approved")
+                    {
+                        string idPago = payment.Id.ToString()!;
+
+                        // 🔥 REGLA DE ORO (Idempotencia): Verificamos que no hayamos despachado este pedido antes.
+                        // Esto evita que mandes correos dobles por Tarjetas de Crédito.
+                        bool yaProcesado = await _context.Pedidos.AnyAsync(p => p.TransaccionGatewayId == idPago);
+                        if (yaProcesado) return; // Si ya existe, ignoramos el webhook
+
+                        // Rescatamos el equipaje secreto
+                        if (payment.Metadata != null && payment.Metadata.ContainsKey("correo"))
+                        {
+                            string correo = payment.Metadata["correo"].ToString()!;
+                            string productosString = payment.Metadata["productos"].ToString()!;
+                            List<int> productosIds = productosString.Split(',').Select(int.Parse).ToList();
+
+                            string franquicia = payment.PaymentMethodId ?? "PSE";
+                            decimal montoPagado = payment.TransactionAmount ?? 0;
+
+                            // 1. Guardamos en Base de Datos
+                            var tokens = await _descargaService.ProcesarPedidoAsync(
+                                correo, idPago, "MercadoPago", franquicia, null, productosIds, montoPagado, "COP");
+
+                            // 2. Preparamos el correo
+                            var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
+                            var itemsDescarga = tokens.Select(t => (
+                                NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
+                                LinkDescarga: $"{baseUrl}/descargar/{t.Id}",
+                                ImagenUrl: string.IsNullOrEmpty(t.Producto?.ImagenUrl) ? $"{baseUrl}/images/default.jpg" : t.Producto.ImagenUrl,
+                                TutorialUrl: t.Producto?.VideoUrl ?? ""
+                            )).ToList();
+
+                            // 3. Despachamos el correo en silencio (background)
+                            await _emailService.EnviarCorreoCompraAsync(correo, idPago, itemsDescarga);
+                        }
+                    }
+                }
+            }
         }
     }
 }
