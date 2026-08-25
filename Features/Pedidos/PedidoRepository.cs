@@ -80,5 +80,43 @@ namespace TiempoBiblia.Api.Features.Pedidos
 
             await _context.SaveChangesAsync();
         }
+        /// <summary>
+        /// Valida que los productos de tipo 'presencial' no excedan su límite de cupos.
+        /// HACK MÁESTRO: Utiliza la propiedad 'PrecioUsd' como el límite máximo de asistentes.
+        /// </summary>
+        public async Task<string?> ValidarDisponibilidadCuposAsync(List<int> productosIds)
+        {
+            // 1. Obtenemos los IDs y cuántas veces intentan comprar el mismo taller en esta transacción
+            var carritoAgrupado = productosIds.GroupBy(id => id).ToDictionary(g => g.Key, g => g.Count());
+
+            foreach (var item in carritoAgrupado)
+            {
+                int productoId = item.Key;
+                int cantidadDeseada = item.Value;
+
+                // 2. Buscamos el producto
+                var producto = await _context.Productos.FindAsync(productoId);
+
+                // 3. Si no existe o NO es presencial, lo ignoramos (pase libre)
+                if (producto == null || !producto.Tipo.Equals("presencial", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                // 4. Si es presencial, el PrecioUsd es nuestro límite de cupos
+                int limiteCupos = (int)producto.PrecioUsd;
+
+                // 5. Contamos cuántas veces se ha vendido en la tabla de Detalles de Pedido
+                int ventasActuales = await _context.PedidoDetalles.CountAsync(d => d.ProductoId == productoId);
+
+                // 6. Validamos si hay espacio suficiente
+                if (ventasActuales + cantidadDeseada > limiteCupos)
+                {
+                    int cuposDisponibles = Math.Max(0, limiteCupos - ventasActuales);
+                    return $"El '{producto.Nombre}' está agotado.";
+                }
+            }
+
+            // Si sobrevive al ciclo, hay cupos para todo.
+            return null; 
+        }
     }
 }

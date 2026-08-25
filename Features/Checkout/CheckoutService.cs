@@ -4,6 +4,7 @@ using MercadoPago.Config;
 using MercadoPago.Resource.Payment;
 using TiempoBiblia.Api.Features.Descargas;
 using TiempoBiblia.Api.Features.Correos;
+using TiempoBiblia.Api.Features.Pedidos;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -17,16 +18,19 @@ namespace TiempoBiblia.Api.Features.Checkout
         private readonly IConfiguration _config;
         private readonly DescargaService _descargaService;
         private readonly EmailService _emailService;
+        private readonly PedidoRepository _pedidoRepository; // 🔥 NUEVO: Para validar cupos de talleres
         private readonly HttpClient _http; // 🔥 NUEVO: Para comunicarnos directamente con PayPal
 
         public CheckoutService(
             IConfiguration config, 
-            DescargaService descargaService, 
+            DescargaService descargaService,
+            PedidoRepository pedidoRepository,
             EmailService emailService, 
             HttpClient http) // 🔥 Lo inyectamos en el constructor
         {
             _config = config;
             _descargaService = descargaService;
+            _pedidoRepository = pedidoRepository;
             _emailService = emailService; 
             _http = http;
             
@@ -65,6 +69,21 @@ namespace TiempoBiblia.Api.Features.Checkout
                 return new RespuestaPagoBrickDto { Aprobado = false, Mensaje = "El token de la tarjeta es inválido." };
 
             var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
+
+            // ==============================================================================
+            // 🔥 VALIDACIÓN DE CUPOS PARA TALLERES PRESENCIALES
+            // ==============================================================================
+            string? errorCupos = await _pedidoRepository.ValidarDisponibilidadCuposAsync(payload.ProductosIds);
+            
+            if (!string.IsNullOrEmpty(errorCupos))
+            {
+                // Devolvemos el rechazo inmediato para que el frontend lo muestre como error
+                return new RespuestaPagoBrickDto 
+                { 
+                    Aprobado = false, 
+                    Mensaje = errorCupos 
+                };
+            }
 
             // ==============================================================================
             // 🔥 CONSTRUCCIÓN DEL REQUEST A MERCADO PAGO
