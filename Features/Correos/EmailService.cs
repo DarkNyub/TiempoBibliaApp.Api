@@ -17,7 +17,7 @@ namespace TiempoBiblia.Api.Features.Correos
         }
 
         // 🔥 CAMBIO: Ahora recibimos la lista completa con Imagen y Tutorial
-        public async Task EnviarCorreoCompraAsync(string destinatario, string numeroPedido, List<(string NombreProducto, string LinkDescarga, string ImagenUrl, string TutorialUrl)> itemsDescarga)
+        public async Task EnviarCorreoCompraAsync(string destinatario, string numeroPedido, List<(string NombreProducto, string LinkDescarga, string ImagenUrl, string TutorialUrl, string Tipo)> itemsDescarga )
         {
             string senderName = _config["SmtpConfig:SenderName"] ?? "TiempoBiblia-Luzy";
             string user = _config["SmtpConfig:User"] ?? "";
@@ -39,38 +39,64 @@ namespace TiempoBiblia.Api.Features.Correos
                         <p style='color: #5D4037; font-size: 16px;'>Tu pedido ha sido procesado con éxito.</p>
                     </div>
                     <div style='background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>
-                        <h3 style='color: #333; border-bottom: 2px solid #F48FB1; padding-bottom: 10px; margin-bottom: 20px;'>Tus recursos listos para descargar:</h3>
+                        <h3 style='color: #333; border-bottom: 2px solid #F48FB1; padding-bottom: 10px; margin-bottom: 20px;'>Tus recursos / talleres:</h3>
                         <ul style='list-style-type: none; padding: 0;'>
             ");
 
-            // 🔥 NUEVO: Recorremos los productos mostrando Imagen, Título, Link y Tutorial
+            // 🔥 NUEVO: Recorremos los productos y cambiamos el diseño según el Tipo
             foreach (var item in itemsDescarga)
             {
+                bool esTallerPresencial = item.Tipo.Equals("presencial", StringComparison.OrdinalIgnoreCase);
+
                 htmlBody.Append($@"
                     <li style='margin-bottom: 25px; text-align: center; background-color: #FAFAFA; padding: 20px; border-radius: 12px; border: 1px solid #FCE4EC;'>
                         <img src='{item.ImagenUrl}' alt='{item.NombreProducto}' style='width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);' />
-                        
                         <h4 style='color: #5D4037; margin: 0 0 15px 0; font-size: 16px;'>{item.NombreProducto}</h4>
-                        
-                        <a href='{item.LinkDescarga}?nombre={item.NombreProducto}' style='display: inline-block; background-color: #F48FB1; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; margin-bottom: 10px;'>
-                            ⬇️ Descargar Archivo Seguro
-                        </a>
                 ");
 
-                // Si el producto tiene un link de YouTube o Instagram, lo mostramos
-                if (!string.IsNullOrEmpty(item.TutorialUrl))
+                // ==========================================
+                // CASO A: ES UN TALLER PRESENCIAL
+                // ==========================================
+                if (esTallerPresencial)
                 {
+                    // Nota: Aquí pasamos el LinkDescarga que el backend construyó, asumiendo que el controlador 
+                    //       de Descargas fue modificado para devolver el link directo de Google Forms sin token,
+                    //       o que se manejará el token pero apuntará al Forms.
                     htmlBody.Append($@"
-                        <br/>
-                        <a href='{item.TutorialUrl}' target='_blank' style='display: inline-block; margin-top: 5px; color: #E91E63; text-decoration: underline; font-size: 14px; font-weight: bold;'>
-                            📺 Ver tutorial paso a paso
+                        <div style='background-color: #E3F2FD; padding: 15px; border-radius: 8px; margin-bottom: 15px;'>
+                            <p style='color: #1565C0; margin: 0 0 10px 0; font-size: 14px;'><strong>¡Último paso!</strong> Por favor, llena el formulario de inscripción para enviarte toda la información del taller (fecha, lugar, materiales, etc).</p>
+                        </div>
+                        <a href='{item.LinkDescarga}' style='display: inline-block; background-color: #2196F3; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; margin-bottom: 10px;'>
+                            📝 Llenar Formulario de Inscripción
                         </a>
                     ");
+                }
+                // ==========================================
+                // CASO B: ES UN IMPRIMIBLE O PRODUCTO DIGITAL
+                // ==========================================
+                else
+                {
+                    htmlBody.Append($@"
+                        <a href='{item.LinkDescarga}?nombre={Uri.EscapeDataString(item.NombreProducto)}' style='display: inline-block; background-color: #F48FB1; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; margin-bottom: 10px;'>
+                            ⬇️ Descargar Archivo Seguro
+                        </a>
+                    ");
+
+                    if (!string.IsNullOrEmpty(item.TutorialUrl))
+                    {
+                        htmlBody.Append($@"
+                            <br/>
+                            <a href='{item.TutorialUrl}' target='_blank' style='display: inline-block; margin-top: 5px; color: #E91E63; text-decoration: underline; font-size: 14px; font-weight: bold;'>
+                                📺 Ver tutorial paso a paso
+                            </a>
+                        ");
+                    }
                 }
 
                 htmlBody.Append("</li>");
             }
 
+            // ... (EL RESTO DE TU MÉTODO QUEDA EXACTAMENTE IGUAL)
             // 🔥 LA REGLA DE ORO + EL FOOTER DE LA OVEJITA
             htmlBody.Append($@"
                         </ul>

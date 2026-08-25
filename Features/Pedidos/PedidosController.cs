@@ -24,16 +24,15 @@ namespace TiempoBiblia.Api.Features.Pedidos
 
         // 🔥 NUEVO: Endpoint para reenviar el correo
         [HttpPost("{id}/reenviar-correo")]
-        public async Task<IActionResult> ReenviarCorreoCompra(int id)
+        public async Task<IActionResult> ReenviarCorreoCompra(int id, [FromBody] ReenviarCorreoRequestDto request)
         {
             try
             {
-                await _pedidoService.ReenviarCorreoPedidoAsync(id);
-                return Ok(new { mensaje = "Correo reenviado exitosamente al cliente." });
+                await _pedidoService.ReenviarCorreoPedidoAsync(id, request.NuevoCorreo);
+                return Ok(new { mensaje = "Correo actualizado y reenviado exitosamente." });
             }
             catch (Exception ex)
             {
-                // Si el servicio lanza una excepción (ej. "Pedido no encontrado"), la atrapamos aquí
                 return BadRequest(new { mensaje = "Error al reenviar el correo.", detalle = ex.Message });
             }
         }

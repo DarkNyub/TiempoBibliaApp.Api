@@ -157,7 +157,8 @@ namespace TiempoBiblia.Api.Features.Checkout
                     NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
                     LinkDescarga: $"{baseUrl}/descargar/{t.Id}",
                     ImagenUrl: string.IsNullOrEmpty(t.Producto?.ImagenUrl) ? $"{baseUrl}/images/default.jpg" : t.Producto.ImagenUrl,
-                    TutorialUrl: t.Producto?.VideoUrl ?? ""
+                    TutorialUrl: t.Producto?.VideoUrl ?? "",
+                    Tipo: t.Producto?.Tipo ?? ""
                 )).ToList();
 
                 await _emailService.EnviarCorreoCompraAsync(payload.CorreoCliente, idPago, itemsDescarga);
@@ -277,7 +278,8 @@ namespace TiempoBiblia.Api.Features.Checkout
                         NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
                         LinkDescarga: $"{baseUrl}/descargar/{t.Id}",
                         ImagenUrl: string.IsNullOrEmpty(t.Producto?.ImagenUrl) ? $"{baseUrl}/images/default.jpg" : t.Producto.ImagenUrl,
-                        TutorialUrl: t.Producto?.VideoUrl ?? ""
+                        TutorialUrl: t.Producto?.VideoUrl ?? "",
+                        Tipo: t.Producto?.Tipo ?? ""
                     )).ToList();
 
                     await _emailService.EnviarCorreoCompraAsync(correoCliente, captureId, itemsDescarga);
@@ -323,7 +325,8 @@ namespace TiempoBiblia.Api.Features.Checkout
                 NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
                 LinkDescarga: $"{baseUrl}/descargar/{t.Id}",
                 ImagenUrl: string.IsNullOrEmpty(t.Producto?.ImagenUrl) ? $"{baseUrl}/images/default.jpg" : t.Producto.ImagenUrl,
-                TutorialUrl: t.Producto?.VideoUrl ?? ""
+                TutorialUrl: t.Producto?.VideoUrl ?? "",
+                Tipo: t.Producto?.Tipo ?? ""
             )).ToList();
 
             await _emailService.EnviarCorreoCompraAsync(request.CorreoCliente, idPago, itemsDescarga);
@@ -379,7 +382,8 @@ namespace TiempoBiblia.Api.Features.Checkout
                                 NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
                                 LinkDescarga: $"{baseUrl}/descargar/{t.Id}",
                                 ImagenUrl: string.IsNullOrEmpty(t.Producto?.ImagenUrl) ? $"{baseUrl}/images/default.jpg" : t.Producto.ImagenUrl,
-                                TutorialUrl: t.Producto?.VideoUrl ?? ""
+                                TutorialUrl: t.Producto?.VideoUrl ?? "",
+                                Tipo: t.Producto?.Tipo ?? ""
                             )).ToList();
 
                             // 3. Despachamos el correo en silencio (background)

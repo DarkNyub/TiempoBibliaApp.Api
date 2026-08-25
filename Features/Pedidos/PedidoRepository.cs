@@ -65,5 +65,20 @@ namespace TiempoBiblia.Api.Features.Pedidos
                 .Where(t => t.CorreoCliente == correo && productosIds.Contains(t.ProductoId))
                 .ToListAsync();
         }
+        public async Task ActualizarCorreoPedidoYTokensAsync(int pedidoId, string correoAntiguo, string correoNuevo, List<int> productosIds)
+        {
+            // 1. Actualizamos el pedido
+            var pedido = await _context.Pedidos.FindAsync(pedidoId);
+            if (pedido != null) pedido.CorreoCliente = correoNuevo;
+
+            // 2. Actualizamos los tokens mágicos para que el nuevo correo tenga permiso
+            var tokens = await _context.TokensDescarga
+                .Where(t => t.CorreoCliente == correoAntiguo && productosIds.Contains(t.ProductoId))
+                .ToListAsync();
+            
+            foreach (var t in tokens) t.CorreoCliente = correoNuevo;
+
+            await _context.SaveChangesAsync();
+        }
     }
 }

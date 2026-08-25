@@ -34,4 +34,8 @@ namespace TiempoBiblia.Api.Features.Pedidos
         public string NombreProductoHistorico { get; set; } = string.Empty;
         public decimal PrecioUnitarioPagado { get; set; }
     }
+    public class ReenviarCorreoRequestDto
+    {
+        public string NuevoCorreo { get; set; } = string.Empty;
+    }
 }

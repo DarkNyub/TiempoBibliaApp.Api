@@ -18,7 +18,7 @@ namespace TiempoBiblia.Api.Features.Pedidos
         /// <summary>
         /// Lógica de negocio para buscar un pedido, rescatar sus links y reenviar el correo al cliente.
         /// </summary>
-        public async Task<bool> ReenviarCorreoPedidoAsync(int pedidoId)
+        public async Task<bool> ReenviarCorreoPedidoAsync(int pedidoId, string nuevoCorreo) // 🔥 Recibe el nuevo
         {
             // 1. Buscamos el pedido en la BD (a través del repositorio)
             var pedido = await _pedidoRepository.ObtenerPedidoConDetallesPorIdAsync(pedidoId);
@@ -29,6 +29,14 @@ namespace TiempoBiblia.Api.Features.Pedidos
 
             // 2. Extraemos los IDs de los productos que compró
             var productosIds = pedido.Detalles.Select(d => d.ProductoId).ToList();
+            string correoOriginal = pedido.CorreoCliente;
+
+            // 🔥 Si el correo cambió, actualizamos la base de datos
+            if (!string.Equals(correoOriginal, nuevoCorreo, StringComparison.OrdinalIgnoreCase))
+            {
+                await _pedidoRepository.ActualizarCorreoPedidoYTokensAsync(pedido.Id, correoOriginal, nuevoCorreo, productosIds);
+                pedido.CorreoCliente = nuevoCorreo; // Para la búsqueda de abajo
+            }
 
             // 3. Buscamos los tokens (enlaces mágicos) que le pertenecen a ese cliente y esos productos
             var tokens = await _pedidoRepository.ObtenerTokensParaReenvioAsync(pedido.CorreoCliente, productosIds);
@@ -44,7 +52,8 @@ namespace TiempoBiblia.Api.Features.Pedidos
                 NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
                 LinkDescarga: $"{baseUrl}/descargar/{t.Id}",
                 ImagenUrl: string.IsNullOrEmpty(t.Producto?.ImagenUrl) ? $"{baseUrl}/images/default.jpg" : t.Producto.ImagenUrl,
-                TutorialUrl: t.Producto?.VideoUrl ?? ""
+                TutorialUrl: t.Producto?.VideoUrl ?? "",
+                Tipo: t.Producto?.Tipo ?? ""
             )).ToList();
 
             // 5. Despachamos el correo utilizando el servicio de correos
