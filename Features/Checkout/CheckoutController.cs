@@ -50,7 +50,7 @@ namespace TiempoBiblia.Api.Features.Checkout
             try
             {
                 // El servicio crea la orden en PayPal y nos devuelve el ID
-                var orderId = await _checkoutService.CrearOrdenPayPalAsync(solicitud.TotalAPagar);
+                var orderId = await _checkoutService.CrearOrdenPayPalAsync(solicitud.TotalAPagar, solicitud.ProductosIds);
                 return Ok(new RespuestaPagoDto { UrlPago = orderId }); 
             }
             catch (Exception ex)

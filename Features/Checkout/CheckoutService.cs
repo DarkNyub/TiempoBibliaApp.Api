@@ -230,8 +230,18 @@ namespace TiempoBiblia.Api.Features.Checkout
         /// <summary>
         /// Paso 1: Crea la orden en PayPal (solo retorna el ID de la orden).
         /// </summary>
-        public async Task<string> CrearOrdenPayPalAsync(decimal totalUsd) // 🔥 Ahora recibe USD directamente
+        public async Task<string> CrearOrdenPayPalAsync(decimal totalUsd, List<int> productosIds) // 🔥 Ahora recibe USD directamente
         {
+            // ==============================================================================
+            // 🔥 VALIDACIÓN DE CUPOS ANTES DE ABRIR PAYPAL
+            // ==============================================================================
+            string? errorCupos = await _pedidoRepository.ValidarDisponibilidadCuposAsync(productosIds);
+            if (!string.IsNullOrEmpty(errorCupos))
+            {
+                // Lanzamos la excepción, el controlador la atrapará y se la enviará a Blazor
+                throw new Exception(errorCupos); 
+            }
+
             var token = await GetPayPalAccessTokenAsync();
             
             // 🔥 FIX: Eliminamos la tasa de cambio quemada. Usamos el valor real que mandó el Frontend.
@@ -323,6 +333,20 @@ namespace TiempoBiblia.Api.Features.Checkout
             if (string.IsNullOrWhiteSpace(request.CorreoCliente) || !request.ProductosIds.Any())
                 throw new ArgumentException("Faltan datos para procesar el pedido gratuito.");
 
+            // ==============================================================================
+            // 🔥 VALIDACIÓN DE CUPOS (INCLUSO SI ES GRATIS)
+            // ==============================================================================
+            string? errorCupos = await _pedidoRepository.ValidarDisponibilidadCuposAsync(request.ProductosIds);
+            
+            if (!string.IsNullOrEmpty(errorCupos))
+            {
+                return new RespuestaPagoBrickDto 
+                { 
+                    Aprobado = false, 
+                    Mensaje = errorCupos 
+                };
+            }
+            
             // 1. Generamos un ID de transacción único para auditoría
             string idPago = $"FREE-{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}";
 
