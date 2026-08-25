@@ -66,7 +66,7 @@ namespace TiempoBiblia.Api.Features.Correos
                         <div style='background-color: #E3F2FD; padding: 15px; border-radius: 8px; margin-bottom: 15px;'>
                             <p style='color: #1565C0; margin: 0 0 10px 0; font-size: 14px;'><strong>¡Último paso!</strong> Por favor, llena el formulario de inscripción para enviarte toda la información del taller (fecha, lugar, materiales, etc).</p>
                         </div>
-                        <a href='{item.LinkDescarga}' style='display: inline-block; background-color: #2196F3; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; margin-bottom: 10px;'>
+                        <a href='{item.TutorialUrl}' style='display: inline-block; background-color: #2196F3; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; margin-bottom: 10px;'>
                             📝 Llenar Formulario de Inscripción
                         </a>
                     ");
