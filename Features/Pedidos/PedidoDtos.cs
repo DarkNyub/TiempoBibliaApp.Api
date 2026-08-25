@@ -2,7 +2,7 @@ namespace TiempoBiblia.Api.Features.Pedidos
 {
     /// <summary>
     /// DTO de solo lectura para el panel de administración.
-    /// Resumen rápido para la tabla de ventas.
+    /// Contiene el resumen de la factura y la lista de productos comprados.
     /// </summary>
     public class PedidoAdminDto
     {
@@ -15,7 +15,23 @@ namespace TiempoBiblia.Api.Features.Pedidos
         public string? CorreoCliente { get; set; }
         public DateTime FechaCreacion { get; set; }
         
-        // Un resumen de cuántos productos compró en esta factura
+        // 🔥 NUEVOS CAMPOS: Para auditoría visual en el panel
+        public string? Franquicia { get; set; }
+        public string? Ultimos4Digitos { get; set; }
+
         public int CantidadProductos { get; set; } 
+        
+        // 🔥 NUEVO: La lista de productos que va a alimentar el Acordeón en el Frontend
+        public List<PedidoDetalleAdminDto> Detalles { get; set; } = new();
+    }
+
+    /// <summary>
+    /// 🔥 NUEVO: DTO para el detalle histórico de cada producto comprado en esa transacción.
+    /// </summary>
+    public class PedidoDetalleAdminDto
+    {
+        public int ProductoId { get; set; }
+        public string NombreProductoHistorico { get; set; } = string.Empty;
+        public decimal PrecioUnitarioPagado { get; set; }
     }
 }
