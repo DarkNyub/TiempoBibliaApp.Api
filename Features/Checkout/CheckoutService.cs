@@ -112,7 +112,7 @@ namespace TiempoBiblia.Api.Features.Checkout
                     Phone = new PaymentPayerPhoneRequest
                     {
                         AreaCode = "57",
-                        Number = "3214725847" // Número genérico de 10 dígitos
+                        Number = string.IsNullOrWhiteSpace(payload.CelularCliente) ? "3000000000" : payload.CelularCliente // Número genérico de 10 dígitos
                     },
                     Address = new PaymentPayerAddressRequest
                     {
