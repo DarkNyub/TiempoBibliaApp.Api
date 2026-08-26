@@ -106,5 +106,30 @@ namespace TiempoBiblia.Api.Features.Checkout
                 return Ok(new { error = ex.Message }); 
             }
         }
+        // 🔥 NUEVO: EL DOBLE CANDADO PARA PSE
+        [HttpGet("sincronizar/{idPago}")]
+        public async Task<IActionResult> SincronizarPagoManual(long idPago, [FromServices] AppDbContext context)
+        {
+            try
+            {
+                // Simulamos un Webhook para obligar al servicio a ir a buscar el estado a Mercado Pago
+                var webhookSimulado = new WebhookMpDto 
+                { 
+                    action = "payment.updated", 
+                    type = "payment", 
+                    data = new DataMp { id = idPago.ToString() } 
+                };
+                
+                // Esto verifica si está aprobado, si no existe en BD lo guarda, y envía el correo.
+                // Si el Webhook real ya lo había hecho, la regla de idempotencia lo ignora y no pasa nada.
+                await _checkoutService.ProcesarWebhookMercadoPagoAsync(webhookSimulado, context);
+                
+                return Ok(new { sincronizado = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }
