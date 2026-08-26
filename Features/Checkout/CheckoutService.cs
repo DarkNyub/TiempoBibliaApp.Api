@@ -96,6 +96,12 @@ namespace TiempoBiblia.Api.Features.Checkout
                 Installments = request.installments > 0 ? request.installments : 1,
                 PaymentMethodId = request.payment_method_id,
                 IssuerId = string.IsNullOrWhiteSpace(request.issuer_id) ? null : request.issuer_id,
+
+                // 🔥 1. ACCIÓN OBLIGATORIA: external_reference (Un ID interno tuyo)
+                ExternalReference = $"TB-{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}",
+                
+                // 🔥 2. ACCIÓN RECOMENDADA: statement_descriptor (Cómo sale en el banco)
+                StatementDescriptor = "TIEMPOBIBLIA",
                 
                 // 🔥 EL EQUIPAJE SECRETO: Guardamos qué compró y su correo
                 Metadata = new Dictionary<string, object>
@@ -109,7 +115,19 @@ namespace TiempoBiblia.Api.Features.Checkout
                 // IP Obligatoria para transferencias bancarias (PSE)
                 AdditionalInfo = new PaymentAdditionalInfoRequest
                 {
-                    IpAddress = ipCliente 
+                    IpAddress = ipCliente,
+                    // 🔥 3. ACCIÓN RECOMENDADA: items.description (Baja la tasa de fraude)
+                    Items = new List<PaymentItemRequest>
+                    {
+                        new PaymentItemRequest
+                        {
+                            Id = "CARRITO",
+                            Title = "Recursos Digitales y Talleres",
+                            Description = "Compra de material digital en tiempobiblia-luzy.online",
+                            Quantity = 1,
+                            UnitPrice = request.transaction_amount
+                        }
+                    }
                 },
                 
 
