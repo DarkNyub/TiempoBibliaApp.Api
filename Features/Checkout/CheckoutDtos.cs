@@ -11,6 +11,8 @@ namespace TiempoBiblia.Api.Features.Checkout
         // Ahora apunta a una clase que contiene la capa extra
         public MpOuterFormDataDto FormData { get; set; } = new(); 
         public string CorreoCliente { get; set; } = string.Empty;
+        public string NombreCliente { get; set; } = string.Empty;
+        public string ApellidoCliente { get; set; } = string.Empty;
         public string CelularCliente { get; set; } = string.Empty;
         public List<int> ProductosIds { get; set; } = new();
     }

@@ -126,8 +126,8 @@ namespace TiempoBiblia.Api.Features.Checkout
                     },
                     
                     // 2. Datos QUEMADOS (Para satisfacer las estrictas reglas de PSE sin molestar al cliente)
-                    FirstName = "Lector",
-                    LastName = "Tiempo Biblia",
+                    FirstName = string.IsNullOrWhiteSpace(payload.NombreCliente) ? "Lector" : payload.NombreCliente,
+                    LastName = string.IsNullOrWhiteSpace(payload.ApellidoCliente) ? "Tiempo Biblia" : payload.ApellidoCliente,
                     Phone = new PaymentPayerPhoneRequest
                     {
                         AreaCode = "57",
