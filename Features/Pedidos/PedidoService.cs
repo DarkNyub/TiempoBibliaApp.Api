@@ -1,4 +1,5 @@
 using TiempoBiblia.Api.Features.Correos;
+using TiempoBiblia.Api.Features.Descargas;
 
 namespace TiempoBiblia.Api.Features.Pedidos
 {
@@ -6,13 +7,15 @@ namespace TiempoBiblia.Api.Features.Pedidos
     {
         private readonly PedidoRepository _pedidoRepository;
         private readonly EmailService _emailService;
-        private readonly IConfiguration _config;
+        private readonly IConfiguration _config;// 🔥 ¡ESTA ES LA LÍNEA QUE TE FALTA!
+        private readonly DescargaService _descargaService;
 
-        public PedidoService(PedidoRepository pedidoRepository, EmailService emailService, IConfiguration config)
+        public PedidoService(PedidoRepository pedidoRepository, EmailService emailService, IConfiguration config, DescargaService descargaService)
         {
             _pedidoRepository = pedidoRepository;
             _emailService = emailService;
             _config = config;
+            _descargaService = descargaService;
         }
 
         /// <summary>
@@ -58,6 +61,38 @@ namespace TiempoBiblia.Api.Features.Pedidos
 
             // 5. Despachamos el correo utilizando el servicio de correos
             await _emailService.EnviarCorreoCompraAsync(pedido.CorreoCliente, pedido.TransaccionGatewayId, itemsDescarga);
+
+            return true;
+        }
+        /// <summary>
+        /// 🔥 NUEVO: Crea un pedido manual simulando una compra real, genera links y envía el correo.
+        /// </summary>
+        public async Task<bool> CrearPedidoManualAsync(CrearPedidoManualDto request)
+        {
+            // 1. Guardamos en Base de Datos reutilizando tu flujo blindado de Checkout
+            var tokens = await _descargaService.ProcesarPedidoAsync(
+                request.CorreoCliente, 
+                request.TransaccionGatewayId, 
+                request.Pasarela, 
+                "Ingreso Manual", // Franquicia
+                null,             // Últimos 4
+                request.ProductosIds, 
+                request.TotalCobrado, 
+                request.Moneda
+            );
+
+            // 2. Preparamos el correo
+            var baseUrl = _config["FrontendSettings:BaseUrl"] ?? "https://tiempobiblia-luzy.online";
+            var itemsDescarga = tokens.Select(t => (
+                NombreProducto: t.Producto?.Nombre ?? "Recurso Digital",
+                LinkDescarga: $"{baseUrl}/descargar/{t.Id}",
+                ImagenUrl: string.IsNullOrEmpty(t.Producto?.ImagenUrl) ? $"{baseUrl}/images/default.jpg" : t.Producto.ImagenUrl,
+                TutorialUrl: t.Producto?.VideoUrl ?? "",
+                Tipo: t.Producto?.Tipo ?? ""
+            )).ToList();
+
+            // 3. Despachamos el correo al cliente
+            await _emailService.EnviarCorreoCompraAsync(request.CorreoCliente, request.TransaccionGatewayId, itemsDescarga);
 
             return true;
         }

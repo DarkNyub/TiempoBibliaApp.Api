@@ -38,4 +38,16 @@ namespace TiempoBiblia.Api.Features.Pedidos
     {
         public string NuevoCorreo { get; set; } = string.Empty;
     }
+    /// <summary>
+    /// DTO para recibir la orden manual desde el panel de administración.
+    /// </summary>
+    public class CrearPedidoManualDto
+    {
+        public string CorreoCliente { get; set; } = string.Empty;
+        public string TransaccionGatewayId { get; set; } = string.Empty;
+        public string Pasarela { get; set; } = "MercadoPago";
+        public decimal TotalCobrado { get; set; }
+        public string Moneda { get; set; } = "COP";
+        public List<int> ProductosIds { get; set; } = new();
+    }
 }

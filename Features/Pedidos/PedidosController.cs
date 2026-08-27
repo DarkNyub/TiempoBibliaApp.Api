@@ -36,5 +36,20 @@ namespace TiempoBiblia.Api.Features.Pedidos
                 return BadRequest(new { mensaje = "Error al reenviar el correo.", detalle = ex.Message });
             }
         }
+        // 🔥 NUEVO: Endpoint para crear pedido manual
+        [HttpPost("manual")]
+        public async Task<IActionResult> CrearPedidoManual([FromBody] CrearPedidoManualDto request)
+        {
+            try
+            {
+                await _pedidoService.CrearPedidoManualAsync(request);
+                return Ok(new { mensaje = "Pedido manual guardado y correo enviado exitosamente." });
+            }
+            catch (Exception ex)
+            {
+                // Si el motor detecta que el ID de transacción ya existe, lanzará excepción aquí
+                return BadRequest(new { mensaje = "Error al crear el pedido manual.", detalle = ex.Message });
+            }
+        }
     }
 }
